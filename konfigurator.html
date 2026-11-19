@@ -38,7 +38,7 @@ var of=window.fetch.bind(window);
 window.fetch=function(input,init){var url=typeof input==="string"?input:(input&&input.url)||"";if(!FS.test(url))return of(input,init);
   init=init||{};var h={};if(init.headers){if(typeof init.headers.forEach==="function"&&!Array.isArray(init.headers))init.headers.forEach(function(v,k){h[k]=v});else Object.assign(h,init.headers)}
   var b=init.body;if(typeof URLSearchParams!=="undefined"&&b instanceof URLSearchParams){h["Content-Type"]="application/x-www-form-urlencoded;charset=UTF-8";b=b.toString()}else if(b!=null&&typeof b!=="string")b=String(b);
-  return relay().then(function(w){return new Promise(function(res,rej){var id="r"+(++seq)+Date.now();var to=setTimeout(function(){delete pend[id];rej(new TypeError("bildirim köprüsü yanıt vermedi"))},25000);
+  return relay().then(function(w){return new Promise(function(res,rej){var id="r"+(++seq)+Date.now();var to=setTimeout(function(){delete pend[id];rej(new TypeError("bildirim köprüsü yanıt vermedi"))},120000);
     pend[id]=function(d){clearTimeout(to);res(new Response(d.text,{status:d.status||502,headers:{"Content-Type":"application/json"}}))};
     w.postMessage({t:"okt-send",id:id,url:url,headers:h,body:b},"*")})})};
 document.addEventListener("DOMContentLoaded",function(){setTimeout(window.__oktRelayWarm,1500)});
@@ -5385,7 +5385,7 @@ function step(n){$("admStep1").hidden=n!==1;$("admStep2").hidden=n!==2;(n===1?$(
 function device(){var u=navigator.userAgent;var os=/Windows/.test(u)?"Windows":/Mac OS/.test(u)?"macOS":/Android/.test(u)?"Android":/iPhone|iPad/.test(u)?"iOS":"Diğer";var br=/Edg\//.test(u)?"Edge":/Chrome\//.test(u)?"Chrome":/Safari\//.test(u)?"Safari":/Firefox\//.test(u)?"Firefox":"Tarayıcı";return br+" · "+os}
 async function sendCode(){
   var now=Date.now();if(now-lastSend<45000){var w=Math.ceil((45000-(now-lastSend))/1000);err("Yeni kod için "+w+" sn bekleyin.");return false}
-  var a=rnd(),code=String(a[0]%1000000).padStart(6,"0");salt=String(a[1]);codeHash=await sha(salt+"|"+code);exp=now+TTL;codeTries=0;lastSend=now;
+  var a=rnd(),code=String(a[0]%1000000).padStart(6,"0");lastSend=now;exp=now+TTL;codeTries=0;salt=String(a[1]);codeHash="pending";codeHash=await sha(salt+"|"+code);
   var when=new Date().toLocaleString("tr-TR"),where=/^https?:/.test(location.protocol)?location.origin+location.pathname:(location.protocol==="file:"?"Bilgisayardan açılan dosya":"Mail taslağı içinden");
   var body={_subject:"OKT Yönetim Paneli · giriş onay kodu: "+code,_template:"table",_captcha:"false",
     "Onay kodu":code,"Geçerlilik":"10 dakika (tek kullanımlık)","Giriş isteği zamanı":when,"Cihaz":device(),"Nereden":where,
@@ -5403,11 +5403,10 @@ window.__oktAskPw=function(){
   async function goPw(){if(Date.now()<lockUntil){err("Çok fazla deneme. Biraz bekleyin.");return}
     var ok=(await sha("okt-panel|"+pi.value))===H;pi.value="";
     if(!ok){pwTries++;err("Şifre hatalı.");if(pwTries>=5){lockUntil=Date.now()+60000;pwTries=0;err("5 hatalı deneme. 1 dakika bekleyin.")}pi.focus();return}
-    pwTries=0;$("admPwGo").disabled=true;err("Onay kodu gönderiliyor…",true);
-    var sent=await sendCode();$("admPwGo").disabled=false;
-    if(sent){err("Kod gönderildi. Mailinizi kontrol edin (Spam klasörüne de bakın).",true);step(2);resendTick()}}
+    pwTries=0;var pr=sendCode();step(2);resendTick();err("Kod gönderiliyor… Mail genellikle 1–2 dakika içinde gelir.",true);
+    pr.then(function(sent){if(sent)err("Kod gönderildi. Mailinizi kontrol edin (Spam klasörüne de bakın).",true);else{step(1)}})}
   async function goCode(){var v=(ci.value||"").replace(/\D/g,"");
-    if(!codeHash){err("Önce şifreyi girin.");step(1);return}
+    if(!codeHash){err("Önce şifreyi girin.");step(1);return}if(codeHash==="pending"){err("Kod hazırlanıyor, birkaç saniye sonra tekrar deneyin.");return}
     if(Date.now()>exp){codeHash="";err("Kodun süresi doldu. Yeni kod isteyin.");return}
     if(v.length!==6){err("6 haneli kodu girin.");return}
     var ok=(await sha(salt+"|"+v))===codeHash;ci.value="";
@@ -5417,7 +5416,7 @@ window.__oktAskPw=function(){
   $("admPwGo").onclick=goPw;pi.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();goPw()}};
   $("admCodeGo").onclick=goCode;ci.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();goCode()}};
   ci.oninput=function(){ci.value=ci.value.replace(/\D/g,"").slice(0,6);if(ci.value.length===6)goCode()};
-  $("admResend").onclick=async function(){err("Yeni kod gönderiliyor…",true);if(await sendCode()){err("Yeni kod gönderildi.",true);resendTick()}};
+  $("admResend").onclick=async function(){if(Date.now()-lastSend<45000)return;var pr=sendCode();resendTick();err("Yeni kod gönderiliyor… Önceki kod artık geçersiz.",true);if(await pr)err("Yeni kod gönderildi.",true)};
   $("admCancel").onclick=function(){codeHash="";err("");step(1);box.hidden=true};
 };
 })();</script>
