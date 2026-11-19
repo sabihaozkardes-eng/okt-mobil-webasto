@@ -448,7 +448,7 @@ body.present .main{grid-template-columns:1fr} body.present .panel,body.present .
       <div class="gerr" id="mErr" role="alert"></div><div id="mApprove" hidden style="margin:10px 0;padding:14px;border:1px solid #c9ccd2;border-radius:6px;background:#f6f7f8"><div style="font-weight:700;font-size:15px;margin-bottom:4px">⏳ Erişim onayı bekleniyor</div><div id="mApTxt" style="font-size:12.5px;line-height:1.5;color:#4f5560;margin-bottom:10px">Talebiniz OKT satış ekibine iletildi. <b>Onay verildiğinde bu ekran kendiliğinden açılır</b>; sayfayı açık bırakabilirsiniz. Kapatırsanız daha sonra aynı cihazdan tekrar "Kayıt ol ve onay iste"ye basarak beklemeye devam edebilirsiniz. Size e-posta veya WhatsApp ile erişim kodu gelirse aşağıya da girebilirsiniz.</div><div style="display:flex;gap:8px"><input id="mCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="Erişim kodu" style="flex:1;min-width:0;padding:10px 11px;border:1px solid #c9ccd2;border-radius:6px;font:inherit;letter-spacing:3px"><button type="button" id="mCodeGo" class="nbtn primary">Girişi tamamla</button></div><div id="mApErr" style="font-size:12.5px;margin-top:6px;min-height:16px;color:#D0112B"></div><div style="display:flex;justify-content:space-between;font-size:12px;margin-top:2px"><button type="button" id="mReq" style="background:none;border:0;padding:0;color:#D0112B;cursor:pointer;font:inherit">Talebi yeniden gönder</button><button type="button" id="mEdit" style="background:none;border:0;padding:0;color:#646973;cursor:pointer;font:inherit">Bilgileri düzenle</button></div></div>
       <button type="submit" class="nbtn primary" id="mBtn">Kayıt ol ve onay iste</button>
       <button type="button" class="gswitch" id="toStaff">Yönetici / satış girişi</button>
-      <button type="button" class="nbtn" id="admOpen" style="width:100%;margin-top:10px;background:#fff;color:#202329;border:1px solid #202329">🔒 Yönetici girişi</button><div id="admPw" hidden style="margin-top:10px;padding:12px;border:1px solid #c9ccd2;border-radius:6px;background:#f6f7f8"><div id="admStep1"><div style="font-size:13px;font-weight:600;margin-bottom:6px">1/2 · Yönetici bilgileri</div><input id="admUserIn" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="Kullanıcı adı" style="display:block;width:100%;box-sizing:border-box;margin-bottom:8px;padding:10px 11px;border:1px solid #c9ccd2;border-radius:6px;font:inherit"><div style="display:flex;gap:8px"><input id="admPwIn" placeholder="Şifre" type="password" autocomplete="current-password" style="flex:1;min-width:0;padding:10px 11px;border:1px solid #c9ccd2;border-radius:6px;font:inherit"><button type="button" id="admPwGo" class="nbtn primary">Devam</button></div></div><div id="admStep2" hidden><div style="font-size:13px;font-weight:600;margin-bottom:4px">2/2 · E-posta onayı</div><div style="font-size:12.5px;color:#4f5560;margin-bottom:8px">Onay kodu kayıtlı yönetici e-postasına gönderildi. Mailinizdeki 6 haneli kodu girin.</div><div style="display:flex;gap:8px"><input id="admCodeIn" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" style="flex:1;min-width:0;padding:10px 11px;border:1px solid #c9ccd2;border-radius:6px;font:inherit" ><button type="button" id="admCodeGo" class="nbtn primary">Doğrula</button></div><div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px"><button type="button" id="admResend" class="lnk" style="background:none;border:0;padding:0;color:#D0112B;cursor:pointer;font:inherit">Kodu tekrar gönder</button><button type="button" id="admCancel" style="background:none;border:0;padding:0;color:#646973;cursor:pointer;font:inherit">İptal</button></div></div><div id="admPwErr" style="color:#D0112B;font-size:12.5px;margin-top:6px;min-height:16px"></div></div><p style="margin:14px 0 0;font-size:11px;line-height:1.4;color:#8a8f98;text-align:center">© 2026 OKT Trailer · Tüm hakları saklıdır. İzinsiz kopyalanamaz ve çoğaltılamaz.</p>
+      <button type="button" class="nbtn" id="admOpen" style="width:100%;margin-top:10px;background:#fff;color:#202329;border:1px solid #202329">🔒 Yönetici girişi</button><div id="admPw" hidden style="margin-top:10px;padding:12px;border:1px solid #c9ccd2;border-radius:6px;background:#f6f7f8"><div id="admStep1"><div style="font-size:13px;font-weight:600;margin-bottom:6px">Yönetici girişi</div><input id="admUserIn" type="text" value="adminsabiha" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="Kullanıcı adı" style="display:block;width:100%;box-sizing:border-box;margin-bottom:8px;padding:10px 11px;border:1px solid #c9ccd2;border-radius:6px;font:inherit"><div style="display:flex;gap:8px"><input id="admPwIn" placeholder="Şifre" type="password" autocomplete="current-password" style="flex:1;min-width:0;padding:10px 11px;border:1px solid #c9ccd2;border-radius:6px;font:inherit"><button type="button" id="admPwGo" class="nbtn primary">Devam</button></div></div><div id="admStep2" hidden><div style="font-size:13px;font-weight:600;margin-bottom:4px">2/2 · E-posta onayı</div><div style="font-size:12.5px;color:#4f5560;margin-bottom:8px">Onay kodu kayıtlı yönetici e-postasına gönderildi. Mailinizdeki 6 haneli kodu girin.</div><div style="display:flex;gap:8px"><input id="admCodeIn" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" style="flex:1;min-width:0;padding:10px 11px;border:1px solid #c9ccd2;border-radius:6px;font:inherit" ><button type="button" id="admCodeGo" class="nbtn primary">Doğrula</button></div><div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px"><button type="button" id="admResend" class="lnk" style="background:none;border:0;padding:0;color:#D0112B;cursor:pointer;font:inherit">Kodu tekrar gönder</button><button type="button" id="admCancel" style="background:none;border:0;padding:0;color:#646973;cursor:pointer;font:inherit">İptal</button></div></div><div id="admPwErr" style="color:#D0112B;font-size:12.5px;margin-top:6px;min-height:16px"></div></div><p style="margin:14px 0 0;font-size:11px;line-height:1.4;color:#8a8f98;text-align:center">© 2026 OKT Trailer · Tüm hakları saklıdır. İzinsiz kopyalanamaz ve çoğaltılamaz.</p>
     </form>
     <form class="gbox" id="gForm" autocomplete="off" hidden>
       <div class="glabel" id="gLabel"></div>
@@ -4847,6 +4847,7 @@ var OKTQR = (function () {
 
   /* ---------- yan menü ---------- */
   var IC = {
+    users: '<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6 2 0 3.5.5 4.5 1.3M17 13l1.5 3 3 .5-2.2 2 .6 3-2.9-1.5-2.9 1.5.6-3-2.2-2 3-.5z"/>',
     erisim: '<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/><path d="M9 12l2 2 4-4"/>',
     dash: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
     offers: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
@@ -4870,7 +4871,7 @@ var OKTQR = (function () {
     ["ÜRETİM", [["line", "Üretim Hattı"], ["fleet", "Teslim & Servis"]]],
     ["FIRSATLAR", [["webasto", "Mobil Webasto Fırsatları"], ["camp", "Kampanyalar & Paylaşım"]]],
     ["ÜRÜN & FİYAT", [["price", "Fiyat Listesi"], ["bulk", "Toplu Fiyat"], ["tier", "İskonto Grupları"], ["cust", "Kayıtlı Firmalar"]]],
-    ["ANALİZ", [["report", "Raporlar"], ["notif", "Bildirimler"], ["rec", "Form Kayıtları"], ["set", "Ayarlar"]]]
+    ["ANALİZ", [["report", "Raporlar"], ["notif", "Bildirimler"], ["rec", "Form Kayıtları"], ["users", "Yönetici Kullanıcıları"], ["set", "Ayarlar"]]]
   ];
   var TITLES = {}; MENU.forEach(function (g) { g[1].forEach(function (x) { TITLES[x[0]] = [g[0], x[1]]; }); });
   function counts() {
@@ -4888,6 +4889,7 @@ var OKTQR = (function () {
   function nav(el, cur, XB) {
     ensureCss();
     try { autoSeed(); } catch (e) { console.warn(e); }
+    try { usersRepublish(); } catch (e) {}
     if (window.__oktAdmOk && !accBusy && Date.now() - accLast > 60000) accSync().then(function (ch) { if (ch) accRerender(); });
     var adm = document.getElementById("admin"); adm && adm.classList.add("oktx");
     var ah = adm && adm.querySelector(".ah");
@@ -4895,7 +4897,7 @@ var OKTQR = (function () {
     var cn = counts();
     el.innerHTML = '<div class="ok-brand">' + logoSvg() + '</div><div class="ok-brand-sub">Yönetim Paneli</div>' +
       MENU.map(function (g) {
-        return '<div class="ok-grp">' + g[0] + "</div>" + g[1].map(function (x) {
+        return '<div class="ok-grp">' + g[0] + "</div>" + g[1].filter(function (x) { return x[0] !== "users" || isOwner(); }).map(function (x) {
           var c = cn[x[0]] || 0, badge = c ? '<span class="cnt' + (x[0] === "fleet" ? " g" : "") + '">' + c + "</span>" : "";
           return '<button type="button" class="ok-nav-i' + (x[0] === cur ? " on" : "") + '" data-t="' + x[0] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (IC[x[0]] || "") + "</svg>" + esc(x[1]) + badge + "</button>";
         }).join("");
@@ -5570,6 +5572,46 @@ var OKTQR = (function () {
   }
   function autoSeed() { if (!demoLoaded() && !LS.get(K_DEMO_OFF, false)) seedDemo(); }
 
+  /* ---------- YÖNETİCİ KULLANICILARI ---------- */
+  var K_USERS = "okt-adm-kullanicilar", K_REVPUB = "okt-adm-rev-pub";
+  function UA() { return window.__oktAdmUsers; }
+  function isOwner() { return !!(window.__oktIsOwner && window.__oktIsOwner()); }
+  function usersRepublish() { if (!isOwner() || !UA()) return; var t = LS.get(K_REVPUB, 0); if (Date.now() - t < 6 * 3600e3) return; var L = LS.get(K_USERS, []).filter(function (x) { return x.durum === "kaldirildi"; }); if (L.length) UA().republish(L); LS.set(K_REVPUB, Date.now()); }
+  function shareBox(x) {
+    var msg = "Merhaba " + (x.n || "") + ",\n\nOKT Trailer Yönetim Paneli için size yönetici yetkisi tanımlandı.\n\n1) Bu linki kullanacağınız bilgisayarda açın:\n" + x.link + "\n\n2) Kullanıcı adı: " + x.u + "\n3) Şifrenizi ayrıca ileteceğim.\n\nOKT Trailer";
+    return '<div class="ox-card" style="border-left:3px solid #2F855A;margin-top:12px"><b>Davet linki hazır · ' + esc(x.n || x.u) + '</b><div style="font-size:12.5px;color:#646973;margin:4px 0 8px">Linki kişiye gönderin, <b>şifreyi ayrı bir kanaldan</b> (telefon / ayrı mesaj) iletin. Link tek başına giriş sağlamaz.</div><textarea readonly style="width:100%;height:58px;font:12px ui-monospace,Menlo,monospace" id="usLink">' + esc(x.link) + '</textarea><div class="ox-row" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button type="button" class="ox-btn sm pri" id="usCopy">Linki kopyala</button><a class="ox-btn sm" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(msg) + '">WhatsApp ile gönder</a><a class="ox-btn sm" href="mailto:?subject=' + encodeURIComponent("OKT Yönetim Paneli · yönetici daveti") + "&body=" + encodeURIComponent(msg) + '">E-posta ile gönder</a></div></div>';
+  }
+  function pageUsers(el) {
+    if (!isOwner()) { el.innerHTML = '<div class="ox-empty">Bu sayfayı yalnızca ana yönetici (adminsabiha) görebilir.</div>'; return; }
+    var L = LS.get(K_USERS, []), act = L.filter(function (x) { return x.durum !== "kaldirildi"; }), can = UA() && UA().canManage();
+    el.innerHTML = '<div class="ox-kpis">' + kpi("Aktif yönetici", act.length + 1, "siz dahil") + kpi("Yetkisi kaldırılan", L.length - act.length, "giriş yapamaz") + "</div>" +
+      '<div class="ox-card"><h3 style="margin:0 0 4px">Yeni yönetici ekle</h3><div style="font-size:13px;color:#646973;margin-bottom:10px">Eklediğiniz kişi tüm panel sayfalarını kullanabilir, kayıtları onaylayabilir. Yönetici ekleme/kaldırma ve sizin şifreniz yalnız sizde kalır. Her girişinde size e-posta gelir.</div>' +
+      (can ? '<div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px"><input id="usN" placeholder="Ad soyad"><input id="usU" placeholder="Kullanıcı adı (ör. ahmet.satis)" autocapitalize="off" spellcheck="false"><input id="usP" type="text" placeholder="Şifre (en az 8 karakter)" autocomplete="off"><button type="button" class="ox-btn pri" id="usAdd">Yetki ver</button></div><div id="usErr" style="font-size:12.5px;color:#D0112B;min-height:16px;margin-top:6px"></div><div id="usOut"></div>'
+        : '<div class="ox-empty">Yönetici eklemek için panelden çıkıp adminsabiha ile yeniden giriş yapın.</div>') + "</div>" +
+      '<div class="ox-card"><table class="ox-tbl"><thead><tr><th>Ad</th><th>Kullanıcı adı</th><th>Eklenme</th><th>Durum</th><th></th></tr></thead><tbody>' +
+      '<tr><td><b>Sabiha Özkardeş</b></td><td>adminsabiha</td><td>—</td><td><span class="ox-pill" style="--c:#1B1C20">Ana yönetici</span></td><td></td></tr>' +
+      L.map(function (x, i) { var off = x.durum === "kaldirildi"; return '<tr data-i="' + i + '"' + (off ? ' style="opacity:.55"' : "") + "><td><b>" + esc(x.n || "—") + "</b></td><td>" + esc(x.u) + "</td><td><small>" + esc(new Date(x.t).toLocaleString("tr-TR")) + '</small></td><td><span class="ox-pill" style="--c:' + (off ? "#646973" : "#2F855A") + '">' + (off ? "Yetki kaldırıldı" : "Aktif") + '</span></td><td style="white-space:nowrap">' + (off ? "" : '<button type="button" class="ox-btn sm" data-link>Davet linki</button> <button type="button" class="ox-btn sm" data-del>Yetkiyi kaldır</button>') + "</td></tr>"; }).join("") +
+      "</tbody></table></div>";
+    var add = el.querySelector("#usAdd");
+    if (add) add.onclick = async function () {
+      var e = el.querySelector("#usErr"); e.textContent = ""; var n = el.querySelector("#usN").value.trim(), u = el.querySelector("#usU").value.trim().toLowerCase(), p = el.querySelector("#usP").value;
+      if (LS.get(K_USERS, []).some(function (x) { return x.u === u && x.durum !== "kaldirildi"; })) { e.textContent = "Bu kullanıcı adı zaten aktif."; return; }
+      add.disabled = true; add.textContent = "Hazırlanıyor…";
+      try { var x = await UA().create(u, n, p); x.durum = "aktif"; var L2 = LS.get(K_USERS, []); L2.push(x); LS.set(K_USERS, L2); render("users", document.getElementById("aBody")); var o = document.getElementById("usOut"); if (o) { o.innerHTML = shareBox(x); bindShare(o); } toast("Yetki verildi · " + (n || u)); }
+      catch (ex) { e.textContent = ex.message || "Oluşturulamadı."; add.disabled = false; add.textContent = "Yetki ver"; }
+    };
+    el.querySelectorAll("tr[data-i]").forEach(function (tr) {
+      var x = LS.get(K_USERS, [])[+tr.dataset.i], lb = tr.querySelector("[data-link]"), db = tr.querySelector("[data-del]");
+      if (lb) lb.onclick = function () { var o = el.querySelector("#usOut") || el; var d = document.createElement("div"); d.innerHTML = shareBox(x); o.innerHTML = ""; o.appendChild(d); bindShare(o); };
+      if (db) db.onclick = async function () {
+        if (!confirm((x.n || x.u) + " kullanıcısının yönetici yetkisi kaldırılsın mı?")) return; db.disabled = true;
+        try { var s = await UA().revoke(x.id); var L2 = LS.get(K_USERS, []); L2[+tr.dataset.i].durum = "kaldirildi"; L2[+tr.dataset.i].revSig = s; L2[+tr.dataset.i].link = ""; LS.set(K_USERS, L2); toast("Yetki kaldırıldı"); render("users", document.getElementById("aBody")); }
+        catch (ex) { db.disabled = false; toast(/imza/.test(ex.message) ? "Yeniden giriş yapın" : "Kaldırılamadı, internet bağlantısını kontrol edin"); }
+      };
+    });
+  }
+  function bindShare(o) { var c = o.querySelector("#usCopy"); if (c) c.onclick = function () { var t = o.querySelector("#usLink"); t.select(); try { navigator.clipboard.writeText(t.value); } catch (e) { document.execCommand("copy"); } toast("Link kopyalandı"); }; }
+
   /* ---------- ERİŞİM ONAYLARI (kayıtlar) ---------- */
   var ACC_INBOX = "okt-kayit-0w6j48nhzo25dbr60s4d844g", K_ACC = "okt-erisim", K_ACC_SEEN = "okt-erisim-msg";
   var accBusy = false, accLocked = 0, accLast = 0, accErr = "";
@@ -5652,7 +5694,7 @@ var OKTQR = (function () {
     if (!el.dataset.synced && Date.now() - accLast > 5000) { el.dataset.synced = 1; accSync().then(function (ch) { var bb = document.getElementById("aBody"); if ((ch || accLocked || accErr) && bb && C().getC() === "erisim") render("erisim", bb); else accRerender(); }); }
   }
 
-  var PAGES = { erisim: pageAccess, dash: pageDash, offers: pageOffers, aband: pageAband, people: pagePeople, report: pageReport, camp: pageCamp, bulk: pageBulk, line: pageLine, fleet: pageFleet, webasto: pageWebasto };
+  var PAGES = { users: pageUsers, erisim: pageAccess, dash: pageDash, offers: pageOffers, aband: pageAband, people: pagePeople, report: pageReport, camp: pageCamp, bulk: pageBulk, line: pageLine, fleet: pageFleet, webasto: pageWebasto };
   function wrapOrig(tab) {
     var b = document.getElementById("aBody"); if (!b || b.querySelector(":scope>.ok-top")) return;
     var wrap = document.createElement("div"); wrap.className = "ok-body"; var inner = document.createElement("div"); inner.className = "ab-orig";
@@ -5686,69 +5728,90 @@ var OKTQR = (function () {
 })();
 </script>
 <script id="okt-admpw">(function(){
-var H="367ed3009a397a5f1f9038b03cfeb6f9cb8befe2bf1666319ce5c47f6c9c9b7f",WRAP={"s": "KtupMzRo2dZ/g0cDS9TXiA==", "i": "4dQvds1NJHEiQHpc", "c": "j2JpLfc2WUJr+Aps7sJc5T0x7ngds9LTQBR455VUhzI6H2sdClHdQ2r3SlyspMkUfleSzDWkdQw4JoNdoee2opuqZAo+krtIOMszOSYcA/ybB4Y/DqydhdkJjx+e9jltcgc4tZiuhA7J07YVRZRplDUkKvTDb/hvVqRwm9rc5n6AUfBygRKYeDOkqnmjdFeooIiyHJw2gI/u+WtuxdUyddyhBY5wajlW4vV/4Wuubwz0+Sbqwmm5MfLIIVQdr6BT/ctejzq60fNx48lIm9eW6S89fgxi6IyIEtDGh/FC1j12eLY="},PKS="okt-adm-pk",HK="okt-adm-h",WK="okt-adm-wrap";
-try{var _h=localStorage.getItem(HK),_w=JSON.parse(localStorage.getItem(WK)||"null");if(_h&&/^[a-f0-9]{64}$/.test(_h)&&_w&&_w.c){H=_h;WRAP=_w}}catch(e){}
-var OK="okt-adm-2fa",MAIL="sabihaozkardes@gmail.com",TTL=10*60000;
-try{if(sessionStorage.getItem(OK)===H+"|2fa")window.__oktAdmOk=true}catch(e){}
+var OWNER="adminsabiha",H="367ed3009a397a5f1f9038b03cfeb6f9cb8befe2bf1666319ce5c47f6c9c9b7f",WRAP={"s": "S0r5oOX9kQMP1le2L/Vr9g==", "i": "FZ//eBrLAohak4kQ", "c": "Vid61ff+M2FtYelVwdPGFAmCwr4C78+aUlU7ETFI6go9PzAMQv60m7n+93BNm3yzgIdGDJCKYthbgnetCku5iJ24qt5bPbakZOm2/c6sO2ZC9ITTaZGh6uSlG69XpFZpX48w2m5QJTcFKzz6RC/ibQqMIIapFVvjrZQqWpYHFK9OY51tD04jVf2ZGdvcLa/CUApKqppmqlLX8O45Hwtf9M0jptrerJT5dC68vBRNQAlSD3/gQjTfPSiYhcUoQkVHAx7UO8gAzP3ksJBHtqDYKhs5vgvpafaEBpB169lygYcS5LPDF360lvVnnAqlHQTxf9nVKwnqiDizWDMSxCbpEUR//ORoNoebz8DBvkDHJGfq4vxl6qO08TyBbm8erCkDlEgmCkNiqrhMVzsK/hbBMk+RS+kE2rNNHABk/d1HxEcZwhtuHXghp6bsJK2c+QLK77CQunHFA5Ohv2krp2Ul6BS8aDoMIKfHy9otLtWGZt3TLm8juBvAyEYxUXVvED+kxkRn9T5tSHPJSj3QKZ6M+R80e3PcpdhH/d0XtYBBXxEjU84vfkkI9ZN0O16diPUXlJzYofS/xwM4jEjL"},SPUB={"kty": "EC", "crv": "P-256", "x": "CozztTZtv7wR6GaLejqOz97itKkfMRrjJRhRNH_QTDE", "y": "tDyPLJ_Isu46Wr9Wlpv0IiFPQ8OclGbLlN0Or7A8_dI"},REV="okt-yetki-2dn5nht3gegxbpdfofcaeiq8",MAIL="sabihaozkardes@gmail.com";
+var OK="okt-adm-2fa",UK="okt-adm-user",PKS="okt-adm-pk",SKS="okt-adm-sk",HK="okt-adm-h",WK="okt-adm-wrap",TK="okt-adm-davet",RK="okt-adm-iptal";
+try{var _h=localStorage.getItem(HK),_w=JSON.parse(localStorage.getItem(WK)||"null");if(_h&&/^[a-f0-9]{64}$/.test(_h)&&_w&&_w.c&&_w.v===2){H=_h;WRAP=_w}else{localStorage.removeItem(HK);localStorage.removeItem(WK)}}catch(e){}
 function $(i){return document.getElementById(i)}
+function LG(k,d){try{var v=JSON.parse(localStorage.getItem(k)||"null");return v==null?d:v}catch(e){return d}}
+function LP(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 async function sha(t){var b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}
-function rnd(){var a=new Uint32Array(2);crypto.getRandomValues(a);return a}
 function ub(b){var s=atob(b),u=new Uint8Array(s.length);for(var i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u}
 function bb(u){var s="";u=new Uint8Array(u);for(var i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s)}
-async function pwKey(pw,salt,use){var b=await crypto.subtle.importKey("raw",new TextEncoder().encode("adminsabiha|"+pw),"PBKDF2",false,["deriveKey"]);return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:300000,hash:"SHA-256"},b,{name:"AES-GCM",length:256},false,[use])}
-async function unwrap(pw,w){var k=await pwKey(pw,ub(w.s),"decrypt");var pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:ub(w.i)},k,ub(w.c));return new TextDecoder().decode(pt)}
-async function wrapJwk(pw,jwk){var salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),k=await pwKey(pw,salt,"encrypt");var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},k,new TextEncoder().encode(jwk));return{s:bb(salt),i:bb(iv),c:bb(ct)}}
-var pendingJwk=null,keyP=null;
+function b64u(s){return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
+function ub64u(s){s=s.replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";return decodeURIComponent(escape(atob(s)))}
+async function pwKey(u,pw,salt,use){var b=await crypto.subtle.importKey("raw",new TextEncoder().encode(u+"|"+pw),"PBKDF2",false,["deriveKey"]);return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:300000,hash:"SHA-256"},b,{name:"AES-GCM",length:256},false,[use])}
+async function unwrap(u,pw,w){var k=await pwKey(u,pw,ub(w.s),"decrypt");return new TextDecoder().decode(await crypto.subtle.decrypt({name:"AES-GCM",iv:ub(w.i)},k,ub(w.c)))}
+async function wrapStr(u,pw,str){var salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),k=await pwKey(u,pw,salt,"encrypt");var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},k,new TextEncoder().encode(str));return{s:bb(salt),i:bb(iv),c:bb(ct),v:2}}
+function device(){var u=navigator.userAgent;var os=/Windows/.test(u)?"Windows":/Mac OS/.test(u)?"macOS":/Android/.test(u)?"Android":/iPhone|iPad/.test(u)?"iOS":"Diğer";var br=/Edg\//.test(u)?"Edge":/Chrome\//.test(u)?"Chrome":/Safari\//.test(u)?"Safari":/Firefox\//.test(u)?"Firefox":"Tarayıcı";return br+" · "+os}
+var ECDSA={name:"ECDSA",namedCurve:"P-256"},SIGN={name:"ECDSA",hash:"SHA-256"};
+async function verifySig(str,sig){var k=await crypto.subtle.importKey("jwk",SPUB,ECDSA,false,["verify"]);return crypto.subtle.verify(SIGN,k,ub(sig),new TextEncoder().encode(str))}
+async function signStr(str){var j=null;try{j=sessionStorage.getItem(SKS)}catch(e){}if(!j)throw new Error("imza anahtarı yok");var k=await crypto.subtle.importKey("jwk",JSON.parse(j),ECDSA,false,["sign"]);return bb(await crypto.subtle.sign(SIGN,k,new TextEncoder().encode(str)))}
+/* oturum */
+try{var _u=sessionStorage.getItem(UK);if(sessionStorage.getItem(OK)==="1|"+_u&&_u){window.__oktAdmOk=true;window.__oktAdmUser=_u}}catch(e){}
+window.__oktIsOwner=function(){return window.__oktAdmUser===OWNER};
+var keyP=null;
 window.__oktAdmKey=function(){if(keyP)return keyP;var j=null;try{j=sessionStorage.getItem(PKS)}catch(e){}if(!j||!window.__oktAdmOk)return Promise.resolve(null);keyP=crypto.subtle.importKey("jwk",JSON.parse(j),{name:"ECDH",namedCurve:"P-256"},false,["deriveKey"]).catch(function(){keyP=null;return null});return keyP};
+/* iptal listesi */
+async function fetchRevoked(){var loc=LG(RK,{});try{var ctl=new AbortController();setTimeout(function(){ctl.abort()},5000);var r=await fetch("https://ntfy.sh/"+REV+"/json?poll=1&since=all",{signal:ctl.signal});var t=await r.text();var ls=t.split("\n");for(var i=0;i<ls.length;i++){if(!ls[i].trim())continue;try{var d=JSON.parse(ls[i]);var m=String(d.message||"").split(":");if(m[0]==="rev1"&&m.length===3&&!loc[m[1]]&&await verifySig("rev:"+m[1],m[2]))loc[m[1]]=1}catch(_){}}LP(RK,loc)}catch(e){}return loc}
+/* davet linki ile gelen yetki */
+async function readInvite(tok){var o=JSON.parse(ub64u(tok));if(!o||!o.p||!o.s)throw 0;if(!(await verifySig(o.p,o.s)))throw 0;var p=JSON.parse(o.p);if(!p.u||!p.h||!p.w||!p.id)throw 0;return{p:p,tok:tok}}
+(async function(){var q=new URLSearchParams(location.search),t=q.get("yetki");if(!t)return;
+  try{var inv=await readInvite(t);var all=LG(TK,{});all[inv.p.u]=inv.tok;LP(TK,all);
+    history.replaceState(null,"",location.pathname+location.search.replace(/([?&])yetki=[^&]*(&|$)/,function(a,b,c){return c?b:""}).replace(/\?$/,"")+location.hash);
+    var go=function(){if(!$("admOpen")){setTimeout(go,300);return}window.__oktInviteUser=inv.p.u;$("admOpen").click();setTimeout(function(){var u=$("admUserIn");if(u)u.value=inv.p.u;var e=$("admPwErr");if(e){e.style.color="#2F855A";e.textContent="Hoş geldiniz "+(inv.p.n||inv.p.u)+"! Yönetici yetkiniz bu cihaza tanımlandı. Size verilen şifreyle giriş yapın."}var pw=$("admPwIn");pw&&pw.focus()},150)};go();
+  }catch(e){console.warn("davet",e);alert("Bu yönetici davet linki geçersiz.")}})();
+var tries=0,lockUntil=0;
+function err(t,ok){var e=$("admPwErr");e.style.color=ok?"#2F855A":"#D0112B";e.textContent=t||""}
+function finish(u,pk,sk){window.__oktAdmOk=true;window.__oktAdmUser=u;keyP=null;try{sessionStorage.setItem(UK,u);sessionStorage.setItem(OK,"1|"+u);if(pk)sessionStorage.setItem(PKS,pk);if(sk)sessionStorage.setItem(SKS,sk)}catch(e){}err("");$("admPw").hidden=true;$("admOpen").click()}
+function notify(u,n){var when=new Date().toLocaleString("tr-TR"),f={_subject:"OKT Yönetim Paneli · "+(n||u)+" giriş yaptı",_template:"table",_captcha:"false","Kullanıcı":u,"Ad":n||"—","Zaman":when,"Cihaz":device(),"Bilgi":"Bu kişinin yetkisini Yönetim Paneli > Yönetici Kullanıcıları sayfasından kaldırabilirsiniz."};
+  fetch("https://formsubmit.co/ajax/"+encodeURIComponent(MAIL),{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(f)}).catch(function(){})}
+async function login(){
+  if(Date.now()<lockUntil){err("Çok fazla deneme. Biraz bekleyin.");return}
+  var u=($("admUserIn").value||"").trim().toLowerCase(),pw=$("admPwIn").value;$("admPwIn").value="";
+  var bad=function(t){tries++;err(t||"Kullanıcı adı veya şifre hatalı.");if(tries>=5){lockUntil=Date.now()+60000;tries=0;err("5 hatalı deneme. 1 dakika bekleyin.")}$("admPwIn").focus()};
+  if(!u||!pw)return err("Kullanıcı adı ve şifreyi girin.");
+  $("admPwGo").disabled=true;err("Kontrol ediliyor…",true);
+  try{
+    if(u===OWNER){
+      if((await sha("okt-panel|"+u+"|"+pw))!==H)return bad();
+      var b=JSON.parse(await unwrap(OWNER,pw,WRAP));tries=0;finish(u,JSON.stringify(b.e),JSON.stringify(b.s));return;
+    }
+    var tok=LG(TK,{})[u];if(!tok)return bad("Bu kullanıcı bu cihazda tanımlı değil. Size gönderilen davet linkini bu cihazda açın.");
+    var inv=await readInvite(tok),p=inv.p;
+    if((await sha("okt-panel|"+u+"|"+pw))!==p.h)return bad();
+    var rv=await fetchRevoked();if(rv[p.id]){var a=LG(TK,{});delete a[u];LP(TK,a);return bad("Bu kullanıcının yönetici yetkisi kaldırılmış.")}
+    var e=await unwrap(u,pw,p.w);tries=0;notify(u,p.n);finish(u,e,null);
+  }catch(ex){console.warn(ex);bad()}finally{$("admPwGo").disabled=false}
+}
+window.__oktAskPw=function(){var box=$("admPw");if(!box)return;box.hidden=false;$("admStep1").hidden=false;$("admStep2").hidden=true;
+  var ui=$("admUserIn");if(!ui.value)ui.value=window.__oktInviteUser||OWNER;$("admPwIn").focus();
+  $("admPwGo").onclick=login;$("admPwIn").onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();login()}};ui.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();$("admPwIn").focus()}};
+  var c=$("admCancel");if(c)c.onclick=function(){err("");box.hidden=true}};
+/* yönetici kullanıcıları (yalnız sahibi) */
+window.__oktAdmUsers={
+  owner:OWNER,
+  canManage:function(){try{return window.__oktIsOwner()&&!!sessionStorage.getItem(SKS)}catch(e){return false}},
+  create:async function(u,n,pw){u=String(u||"").trim().toLowerCase();if(!/^[a-z0-9._-]{3,30}$/.test(u))throw new Error("Kullanıcı adı 3–30 karakter olmalı; yalnız harf, rakam, nokta, tire.");if(u===OWNER)throw new Error("Bu kullanıcı adı size ait.");if(String(pw).length<8)throw new Error("Şifre en az 8 karakter olmalı.");
+    var pk=sessionStorage.getItem(PKS);if(!pk)throw new Error("Yeniden giriş yapın.");
+    var id=Array.from(crypto.getRandomValues(new Uint8Array(8)),function(x){return x.toString(16).padStart(2,"0")}).join("");
+    var p=JSON.stringify({u:u,n:n||"",h:await sha("okt-panel|"+u+"|"+pw),w:await wrapStr(u,pw,pk),id:id,t:Date.now()});
+    var tok=b64u(JSON.stringify({p:p,s:await signStr(p)}));
+    return{u:u,n:n||"",id:id,t:Date.now(),link:"https://sabihaozkardes-eng.github.io/okt-mobil-webasto/konfigurator.html?yetki="+tok}},
+  revoke:async function(id){var s=await signStr("rev:"+id);var r=await fetch("https://ntfy.sh/"+REV,{method:"POST",body:"rev1:"+id+":"+s});if(!r.ok)throw new Error("HTTP "+r.status);return s},
+  republish:function(list){list.forEach(function(x){if(x.revSig)fetch("https://ntfy.sh/"+REV,{method:"POST",body:"rev1:"+x.id+":"+x.revSig}).catch(function(){})})}
+};
+/* şifre değiştir (yalnız sahibi) */
 window.__oktAdmPwUI=function(){var box=document.getElementById("okAdmPwBox");if(!box||box.dataset.ok)return;box.dataset.ok=1;
-  box.innerHTML='<div style="border:1px solid #c9ccd2;border-radius:6px;padding:12px;background:#fff"><div style="font-weight:700;margin-bottom:4px">Yönetici şifresini değiştir</div><div style="font-size:12.5px;color:#646973;margin-bottom:8px">Kullanıcı adı: <b>adminsabiha</b> (değişmez). Giriş e-postası sabittir. Yeni şifre bu tarayıcıda geçerli olur.</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px"><input id="apOld" type="password" placeholder="Mevcut şifre" autocomplete="current-password"><input id="apNew" type="password" placeholder="Yeni şifre (en az 6)" autocomplete="new-password"><input id="apNew2" type="password" placeholder="Yeni şifre tekrar" autocomplete="new-password"><button type="button" class="nbtn primary" id="apGo">Şifreyi değiştir</button></div><div id="apMsg" style="font-size:12.5px;margin-top:6px;min-height:16px"></div></div>';
+  if(!window.__oktIsOwner()){box.innerHTML='<div style="font-size:12.5px;color:#646973">Yönetici şifrenizi değiştirmek için '+OWNER+' kullanıcısından yeni davet linki isteyin.</div>';return}
+  box.innerHTML='<div style="border:1px solid #c9ccd2;border-radius:6px;padding:12px;background:#fff"><div style="font-weight:700;margin-bottom:4px">Yönetici şifresini değiştir</div><div style="font-size:12.5px;color:#646973;margin-bottom:8px">Kullanıcı adı: <b>'+OWNER+'</b> (değişmez). Giriş e-postası sabittir. Yeni şifre bu tarayıcıda geçerli olur.</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px"><input id="apOld" type="password" placeholder="Mevcut şifre" autocomplete="current-password"><input id="apNew" type="password" placeholder="Yeni şifre (en az 6)" autocomplete="new-password"><input id="apNew2" type="password" placeholder="Yeni şifre tekrar" autocomplete="new-password"><button type="button" class="nbtn primary" id="apGo">Şifreyi değiştir</button></div><div id="apMsg" style="font-size:12.5px;margin-top:6px;min-height:16px"></div></div>';
   var m=function(t,ok){var e=document.getElementById("apMsg");e.style.color=ok?"#2F855A":"#D0112B";e.textContent=t};
   document.getElementById("apGo").onclick=async function(){var o=document.getElementById("apOld").value,n=document.getElementById("apNew").value,n2=document.getElementById("apNew2").value;
-    if((await sha("okt-panel|adminsabiha|"+o))!==H)return m("Mevcut şifre hatalı.");if(n.length<6)return m("Yeni şifre en az 6 karakter olmalı.");if(n!==n2)return m("Yeni şifreler aynı değil.");
-    m("Kaydediliyor…",true);try{var jwk=await unwrap(o,WRAP),nw=await wrapJwk(n,jwk),nh=await sha("okt-panel|adminsabiha|"+n);localStorage.setItem(WK,JSON.stringify(nw));localStorage.setItem(HK,nh);H=nh;WRAP=nw;try{sessionStorage.setItem(OK,H+"|2fa")}catch(e){}
+    if((await sha("okt-panel|"+OWNER+"|"+o))!==H)return m("Mevcut şifre hatalı.");if(n.length<6)return m("Yeni şifre en az 6 karakter olmalı.");if(n!==n2)return m("Yeni şifreler aynı değil.");
+    m("Kaydediliyor…",true);try{var b=await unwrap(OWNER,o,WRAP),nw=await wrapStr(OWNER,n,b),nh=await sha("okt-panel|"+OWNER+"|"+n);localStorage.setItem(WK,JSON.stringify(nw));localStorage.setItem(HK,nh);H=nh;WRAP=nw;
       ["apOld","apNew","apNew2"].forEach(function(i){document.getElementById(i).value=""});m("✅ Şifre değiştirildi. Bir sonraki girişte yeni şifreyi kullanın.",true)}catch(e){console.warn(e);m("Şifre değiştirilemedi.")}};
 };
-var pwTries=0,lockUntil=0,codeHash="",salt="",exp=0,codeTries=0,lastSend=0,timer=null;
-function err(t,ok){var e=$("admPwErr");e.style.color=ok?"#2F855A":"#D0112B";e.textContent=t||""}
-function step(n){$("admStep1").hidden=n!==1;$("admStep2").hidden=n!==2;(n===1?($("admUserIn").value?$("admPwIn"):$("admUserIn")):$("admCodeIn")).focus()}
-function device(){var u=navigator.userAgent;var os=/Windows/.test(u)?"Windows":/Mac OS/.test(u)?"macOS":/Android/.test(u)?"Android":/iPhone|iPad/.test(u)?"iOS":"Diğer";var br=/Edg\//.test(u)?"Edge":/Chrome\//.test(u)?"Chrome":/Safari\//.test(u)?"Safari":/Firefox\//.test(u)?"Firefox":"Tarayıcı";return br+" · "+os}
-async function sendCode(){
-  var now=Date.now();if(now-lastSend<45000){var w=Math.ceil((45000-(now-lastSend))/1000);err("Yeni kod için "+w+" sn bekleyin.");return false}
-  var a=rnd(),code=String(a[0]%1000000).padStart(6,"0");lastSend=now;exp=now+TTL;codeTries=0;salt=String(a[1]);codeHash="pending";codeHash=await sha(salt+"|"+code);
-  var when=new Date().toLocaleString("tr-TR"),where=/^https?:/.test(location.protocol)?location.origin+location.pathname:(location.protocol==="file:"?"Bilgisayardan açılan dosya":"Mail taslağı içinden");
-  var body={_subject:"OKT Yönetim Paneli · giriş onay kodu: "+code,_template:"table",_captcha:"false",
-    "Onay kodu":code,"Geçerlilik":"10 dakika (tek kullanımlık)","Giriş isteği zamanı":when,"Cihaz":device(),"Nereden":where,
-    "Uyarı":"Bu girişi siz ya da yetki verdiğiniz biri başlatmadıysa kodu kimseyle paylaşmayın ve yönetici şifresini değiştirin.",
-    Mesaj:"OKT Yönetim Paneli için giriş isteği alındı.\n\nOnay kodu: "+code+"\nGeçerlilik: 10 dakika\nZaman: "+when+"\nCihaz: "+device()+"\nNereden: "+where};
-  code="";
-  try{var r=await fetch("https://formsubmit.co/ajax/"+encodeURIComponent(MAIL),{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(body)});
-    var j=await r.json().catch(function(){return{}});if(!r.ok||String(j.success)==="false")throw new Error(j.message||("HTTP "+r.status));return true}
-  catch(e){codeHash="";lastSend=0;err("Onay kodu gönderilemedi. İnternet bağlantısını kontrol edip tekrar deneyin.");console.warn(e);return false}
-}
-function resendTick(){var b=$("admResend");clearInterval(timer);timer=setInterval(function(){var w=Math.ceil((45000-(Date.now()-lastSend))/1000);if(w>0){b.disabled=true;b.style.opacity=.5;b.textContent="Kodu tekrar gönder ("+w+")"}else{b.disabled=false;b.style.opacity=1;b.textContent="Kodu tekrar gönder";clearInterval(timer)}},500)}
-window.__oktAskPw=function(){
-  var box=$("admPw");if(!box)return;box.hidden=false;step(codeHash&&Date.now()<exp?2:1);
-  var pi=$("admPwIn"),ci=$("admCodeIn");$("admUserIn").onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();pi.focus()}};
-  async function goPw(){if(Date.now()<lockUntil){err("Çok fazla deneme. Biraz bekleyin.");return}
-    var ui=$("admUserIn"),pwPlain=pi.value,ok=(await sha("okt-panel|"+(ui.value||"").trim().toLowerCase()+"|"+pi.value))===H;pi.value="";if(!ok)pwPlain="";
-    if(!ok){pwTries++;err("Kullanıcı adı veya şifre hatalı.");if(pwTries>=5){lockUntil=Date.now()+60000;pwTries=0;err("5 hatalı deneme. 1 dakika bekleyin.")}pi.focus();return}
-    pwTries=0;var _pw=pwPlain;pendingJwk=null;unwrap(_pw,WRAP).then(function(j){pendingJwk=j}).catch(function(e){console.warn("key",e)});var pr=sendCode();step(2);resendTick();err("Kod gönderiliyor… Mail genellikle 1–2 dakika içinde gelir.",true);
-    pr.then(function(sent){if(sent)err("Kod gönderildi. Mailinizi kontrol edin (Spam klasörüne de bakın).",true);else{step(1)}})}
-  async function goCode(){var v=(ci.value||"").replace(/\D/g,"");
-    if(!codeHash){err("Önce şifreyi girin.");step(1);return}if(codeHash==="pending"){err("Kod hazırlanıyor, birkaç saniye sonra tekrar deneyin.");return}
-    if(Date.now()>exp){codeHash="";err("Kodun süresi doldu. Yeni kod isteyin.");return}
-    if(v.length!==6){err("6 haneli kodu girin.");return}
-    var ok=(await sha(salt+"|"+v))===codeHash;ci.value="";
-    if(!ok){codeTries++;if(codeTries>=5){codeHash="";err("5 hatalı kod. Yeni kod isteyin.");step(1)}else err("Kod hatalı. Kalan deneme: "+(5-codeTries));ci.focus();return}
-    codeHash="";window.__oktAdmOk=true;try{sessionStorage.setItem(OK,H+"|2fa");if(pendingJwk)sessionStorage.setItem(PKS,pendingJwk)}catch(e){}pendingJwk=null;keyP=null;
-    err("");box.hidden=true;$("admOpen").click()}
-  $("admPwGo").onclick=goPw;pi.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();goPw()}};
-  $("admCodeGo").onclick=goCode;ci.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();goCode()}};
-  ci.oninput=function(){ci.value=ci.value.replace(/\D/g,"").slice(0,6);if(ci.value.length===6)goCode()};
-  $("admResend").onclick=async function(){if(Date.now()-lastSend<45000)return;var pr=sendCode();resendTick();err("Yeni kod gönderiliyor… Önceki kod artık geçersiz.",true);if(await pr)err("Yeni kod gönderildi.",true)};
-  $("admCancel").onclick=function(){codeHash="";err("");step(1);box.hidden=true};
-};
-})();</script>
+})();
+</script>
 <script id="okt-guard">(function(){function ed(t){return t&&t.closest&&t.closest("input,textarea,[contenteditable]")}document.addEventListener("contextmenu",function(e){if(!ed(e.target))e.preventDefault()});document.addEventListener("keydown",function(e){var k=(e.key||"").toLowerCase();if((e.ctrlKey||e.metaKey)&&(k==="s"||k==="u"||(e.shiftKey&&(k==="i"||k==="j"||k==="c")))){e.preventDefault()}if(k==="f12")e.preventDefault()});document.addEventListener("dragstart",function(e){if(e.target&&e.target.tagName==="IMG")e.preventDefault()});})();</script>
 <script id="okt-onay">(function(){
 var INBOX="okt-kayit-0w6j48nhzo25dbr60s4d844g",ADMPUB={"kty": "EC", "crv": "P-256", "x": "s9fHE0F3pLNPyBGMXZ-M136dToDYRNtlhJ99rFtIqYs", "y": "g9y6QvdrUCO1HxFPv4EsywJkOQZlEQgHVfAvLnDgD7M"};
