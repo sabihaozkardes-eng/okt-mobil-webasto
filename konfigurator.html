@@ -4869,7 +4869,7 @@ var OKTQR = (function () {
   var MENU = [
     ["SATIŞ", [["dash", "Kokpit"], ["offers", "Teklifler"], ["aband", "Yarım Kalanlar"], ["people", "Müşteri Kartları"]]],
     ["ÜRETİM", [["line", "Üretim Hattı"], ["fleet", "Teslim & Servis"]]],
-    ["FIRSATLAR", [["webasto", "Mobil Webasto Fırsatları"], ["camp", "Kampanya & Fuar QR"]]],
+    ["FIRSATLAR", [["webasto", "Mobil Webasto Fırsatları"], ["camp", "Kampanyalar & Paylaşım"]]],
     ["ÜRÜN & FİYAT", [["price", "Fiyat Listesi"], ["bulk", "Toplu Fiyat"], ["tier", "İskonto Grupları"], ["cust", "Kayıtlı Firmalar"]]],
     ["ANALİZ", [["report", "Raporlar"], ["notif", "Bildirimler"], ["rec", "Form Kayıtları"], ["set", "Ayarlar"]]]
   ];
@@ -5097,7 +5097,7 @@ var OKTQR = (function () {
       '<div class="ox-card"><div class="ox-row"><label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="oxAbD"' + (st.abShowDone ? " checked" : "") + '> Arananları da göster</label><span style="flex:1"></span><button type="button" class="ox-btn" id="oxAbX">⬇ Excel\'e aktar</button></div>' +
       (list.length ? '<div style="overflow:auto"><table class="ox-tbl"><thead><tr><th>Ne zaman</th><th>Müşteri</th><th>Ürün</th><th>Kaldığı yer</th><th>İlerleme</th><th class="r">Ara toplam</th><th></th></tr></thead><tbody>' +
         list.map(function (a) {
-          var body = "Merhaba " + (a.ad || "") + ",\n\nOKT Trailer ürün yapılandırıcısında " + (a.urun || "tankeriniz") + " için başladığınız yapılandırmayı gördük. Tamamlamanıza yardımcı olmak ve size özel teklifimizi hazırlamak isteriz.\n\nKaldığınız yerden devam etmek için: " + SITE + "?kampanya=" + encodeURIComponent(a.kampanya || "takip") + "&e=" + encodeURIComponent(a.email || "") + "&ad=" + encodeURIComponent(a.ad || "") + "\n\nSaygılarımızla,\nOKT Trailer Satış Ekibi";
+          var body = "Merhaba " + (a.ad || "") + ",\n\nOKT Trailer ürün yapılandırıcısında " + (a.urun || "tankeriniz") + " için başladığınız yapılandırmayı gördük. Tamamlamanıza yardımcı olmak ve size özel teklifimizi hazırlamak isteriz.\n\nKaldığınız yerden devam etmek için: " + KONF + "?kampanya=" + encodeURIComponent(a.kampanya || "takip") + "&e=" + encodeURIComponent(a.email || "") + "&ad=" + encodeURIComponent(a.ad || "") + "\n\nSaygılarımızla,\nOKT Trailer Satış Ekibi";
           return '<tr data-id="' + a.id + '"' + (a.arandi ? ' style="opacity:.55"' : "") + '><td style="white-space:nowrap">' + ago(a.t) + "<br><small>" + dt(a.t) + "</small></td><td><b>" + esc(a.ad || "—") + "</b>" + (a.firma ? " · " + esc(a.firma) : "") + "<br><small>" + esc(a.email) + (a.tel ? " · " + esc(a.tel) : "") + "</small></td><td>" + esc(a.urun) + "</td><td>" + esc(a.adim || "—") + "</td><td>" + esc(a.cevap || "") + "<br><small>" + (a.sure || 1) + ' dk</small></td><td class="r"><b>' + eur(a.toplam) + '</b></td><td style="white-space:nowrap">' +
             (a.tel ? '<a class="ox-btn sm" href="' + telLink(a.tel) + '">📞 Ara</a> ' : "") +
             (a.email ? '<a class="ox-btn sm" href="mailto:' + esc(a.email) + "?subject=" + encodeURIComponent("OKT Trailer · Yapılandırmanızı tamamlayalım") + "&body=" + encodeURIComponent(body) + '">✉ Hatırlat</a> ' : "") +
@@ -5180,27 +5180,6 @@ var OKTQR = (function () {
     document.getElementById("oxAll").onclick = function () { var T = { giris: "Giriş", secim: "Teklif özeti", ayril: "Ayrıldı", teklif: "Teklif" }; download("OKT_Tum_Hareketler.csv", csv([["Tarih", "Olay", "Ad soyad", "Firma", "E-posta", "Telefon", "Ürün", "Tutar", "Kampanya", "Teklif no", "Kaldığı yer"]].concat(acts().map(function (a) { return [dt(a.t), T[a.type] || a.type, a.ad, a.firma, a.email, a.tel, a.urun, a.toplam || "", a.kampanya, a.teklifNo, a.adim || ""]; })))); };
   }
 
-  function pageCamp(el) {
-    var X = C().Xt; X.settings = X.settings || {}; var list = X.settings.kampanyalar || (X.settings.kampanyalar = []);
-    if (!list.length) { list.push({ kod: "mobil-webasto", ad: "Mobil Webasto e-posta kampanyası", pct: 0, aktif: true }); }
-    var L = acts();
-    function stat(kod) { var g = {}, t = 0, n = 0; L.forEach(function (a) { if (String(a.kampanya || "").toLowerCase() !== String(kod).toLowerCase()) return; if (a.type === "giris") g[pkey(a)] = 1; if (a.type === "teklif") { n++; t += a.toplam || 0; } }); return { g: Object.keys(g).length, n: n, t: t }; }
-    function save() { C().ho(); try { C().gf(); } catch (e) {} toast("Kampanyalar kaydedildi"); }
-    el.innerHTML = '<div class="ox-h1 sub"><small>Kampanya linkiyle gelen müşterilere otomatik indirim tanımlayın ve performansını izleyin</small></div>' +
-      '<div class="ox-card"><h3>Kampanyalar <button type="button" class="ox-btn pri" id="oxCAdd">+ Yeni kampanya</button></h3>' +
-      '<div style="overflow:auto"><table class="ox-tbl"><thead><tr><th>Durum</th><th>Kampanya kodu</th><th>Ad</th><th class="r">İndirim %</th><th class="r">Giriş</th><th class="r">Teklif</th><th class="r">Tutar</th><th>Link</th><th></th></tr></thead><tbody>' +
-      list.map(function (k, i) { var s = stat(k.kod), url = SITE + "?kampanya=" + encodeURIComponent(k.kod); return '<tr data-i="' + i + '"><td><label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" data-f="aktif"' + (k.aktif !== false ? " checked" : "") + "> " + (k.aktif !== false ? '<span class="ox-pill" style="--c:#2F855A">Aktif</span>' : '<span class="ox-pill" style="--c:#9aa0a8">Pasif</span>') + '</label></td><td><input class="ox-in" data-f="kod" value="' + esc(k.kod) + '" style="width:150px"></td><td><input class="ox-in" data-f="ad" value="' + esc(k.ad) + '" style="width:220px"></td><td class="r"><input class="ox-in" data-f="pct" value="' + esc(k.pct) + '" inputmode="decimal" style="width:70px;text-align:right"></td><td class="r">' + s.g + '</td><td class="r">' + s.n + '</td><td class="r"><b>' + eur(s.t) + '</b></td><td style="white-space:nowrap"><button type="button" class="ox-btn sm dk" data-qr>▦ Fuar QR</button> <button type="button" class="ox-btn sm" data-copy="' + esc(url) + '">🔗 Linki kopyala</button></td><td><button type="button" class="ox-btn sm" data-del>Sil</button></td></tr>'; }).join("") +
-      '</tbody></table></div><p style="font-size:12.5px;color:#6b7280;margin:12px 0 0">İndirim, müşterinin iskonto grubuna <b>ek olarak</b> uygulanır ve fiyatta hemen görünür. Mail taslağındaki konfigüratör butonu <code>mobil-webasto</code> koduyla gelir. <b>Fuar QR</b> ile stant için basılabilir QR kodu alın; okutan ziyaretçiler o kampanyaya sayılır.</p></div>';
-    el.querySelectorAll("tr[data-i]").forEach(function (tr) {
-      var k = list[Number(tr.dataset.i)];
-      tr.querySelectorAll("[data-f]").forEach(function (inp) { inp.onchange = function () { var f = inp.dataset.f; k[f] = f === "aktif" ? inp.checked : f === "pct" ? Math.max(0, Math.min(90, Number(String(inp.value).replace(",", ".")) || 0)) : inp.value.trim(); save(); pageCamp(el); }; });
-      tr.querySelector("[data-qr]").onclick = function () { showQr(k.kod, k.ad); };
-      tr.querySelector("[data-del]").onclick = function () { list.splice(Number(tr.dataset.i), 1); save(); pageCamp(el); };
-      tr.querySelector("[data-copy]").onclick = function (e) { var u = e.target.dataset.copy; try { navigator.clipboard.writeText(u).then(function () { toast("Link kopyalandı"); }, function () { prompt("Link:", u); }); } catch (_) { prompt("Link:", u); } };
-    });
-    document.getElementById("oxCAdd").onclick = function () { list.push({ kod: "kampanya-" + (list.length + 1), ad: "Yeni kampanya", pct: 5, aktif: true }); save(); pageCamp(el); };
-  }
-
   function pageBulk(el) {
     var core = C(), xr = core.xr, Go = core.Go || [];
     var items = core.af(xr).filter(function (o) { return (st.bulkPid === "*" || o.pid === st.bulkPid) && Number(o.fiyat) > 0; });
@@ -5231,6 +5210,103 @@ var OKTQR = (function () {
     document.getElementById("oxKurS").onclick = function () { var v = Number(String(document.getElementById("oxKur").value).replace(",", ".")) || 0; core.Xt.settings = core.Xt.settings || {}; core.Xt.settings.kur = v; core.ho(); try { core.gf(); } catch (e) {} toast("Kur kaydedildi"); };
   }
 
+
+  /* ---------- KAMPANYALAR & PAYLAŞIM ---------- */
+  function campUrl(k) { return KONF + "?kampanya=" + encodeURIComponent(k.kod); }
+  function copyText(t, btn) {
+    function ok() { if (btn) { var o = btn.innerHTML; btn.innerHTML = "✓ Kopyalandı"; btn.classList.add("dk"); setTimeout(function () { btn.innerHTML = o; btn.classList.remove("dk"); }, 1600); } toast("Kopyalandı"); }
+    try { navigator.clipboard.writeText(t).then(ok, fb); } catch (e) { fb(); }
+    function fb() { var a = document.createElement("textarea"); a.value = t; a.style.cssText = "position:fixed;left:-9999px"; document.body.appendChild(a); a.select(); try { document.execCommand("copy"); ok(); } catch (_) { prompt("Kopyalayın:", t); } a.remove(); }
+  }
+  function modal(html, wide) {
+    var o = document.createElement("div"); o.className = "ok-qr";
+    o.innerHTML = '<div class="ok-qr-box okc" style="--bl:22px;--bw:3px;text-align:left;' + (wide ? "width:min(1100px,100%);" : "width:min(640px,100%);") + 'max-height:92vh;overflow:auto">' + html + "</div>";
+    document.body.appendChild(o);
+    o.onclick = function (e) { if (e.target === o) o.remove(); };
+    o.querySelectorAll("[data-x]").forEach(function (b) { b.onclick = function () { o.remove(); }; });
+    return o;
+  }
+  function landingHtml(k) {
+    var url = campUrl(k), qr = "";
+    try { qr = OKTQR.svg(url, { color: "#1B1C20", quiet: 2 }); } catch (e) {}
+    var pct = Number(k.pct) || 0;
+    return '<!doctype html>\n<!-- © ' + new Date().getFullYear() + ' OKT Trailer. Tüm hakları saklıdır. İzinsiz kopyalanamaz. -->\n<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + esc(k.ad || "OKT Trailer") + ' · OKT Trailer</title>' +
+      '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">' +
+      '<style>*{box-sizing:border-box}body{margin:0;font-family:Barlow,Arial,sans-serif;background:#E9EBEE;color:#1B1C20}' +
+      '.hero{background:#1B1C20;color:#fff;position:relative;overflow:hidden}.mk{position:absolute;right:-120px;top:-60px;width:620px;opacity:.06;color:#fff}.mk svg{width:100%;height:auto}' +
+      '.wrap{max-width:1100px;margin:0 auto;padding:28px 28px}.top{display:flex;align-items:center;justify-content:space-between}.lg svg{height:30px;width:auto;color:#fff;display:block}' +
+      '.tag{font:700 12px Barlow,Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.6)}' +
+      '.grid{display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:center;padding:56px 0 64px;position:relative}' +
+      'h1{font:700 clamp(40px,6vw,72px)/1 "Barlow Condensed",sans-serif;margin:0 0 18px;text-transform:uppercase}h1 em{font-style:normal;color:#D0112B}' +
+      'p.lead{font-size:19px;line-height:1.5;color:rgba(255,255,255,.82);margin:0 0 26px;max-width:560px}' +
+      '.cta{display:inline-flex;align-items:center;gap:10px;background:#D0112B;color:#fff;text-decoration:none;font:700 18px Barlow,Arial,sans-serif;padding:17px 28px;border-radius:4px}.cta:hover{background:#B00E24}' +
+      '.badge{display:inline-block;background:#fff;color:#D0112B;font:700 15px Barlow,Arial,sans-serif;padding:7px 12px;margin-bottom:18px;border-left:4px solid #D0112B}' +
+      '.qr{background:#fff;color:#1B1C20;padding:26px;text-align:center;position:relative}.qr svg{width:100%;max-width:300px;height:auto;display:block;margin:10px auto}.qr b{font:700 22px "Barlow Condensed","Arial Narrow",Arial,sans-serif;text-transform:uppercase}.qr small{display:block;color:#646973;font-size:13px}' +
+      '.qr:before,.qr:after{content:"";position:absolute;width:22px;height:22px;border:3px solid #D0112B}.qr:before{top:0;left:0;border-right:0;border-bottom:0}.qr:after{bottom:0;right:0;border-left:0;border-top:0}' +
+      '.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:40px 0}.f{background:#fff;padding:22px}.f b{display:block;font:700 22px "Barlow Condensed","Arial Narrow",Arial,sans-serif;text-transform:uppercase;margin-bottom:6px}.f b:before{content:"";display:inline-block;width:9px;height:9px;background:#D0112B;margin-right:10px;vertical-align:3px}.f p{margin:0;color:#4f5560;line-height:1.5}' +
+      'footer{padding:22px 28px 36px;text-align:center;color:#646973;font-size:13px}footer b{color:#1B1C20;font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-size:18px}footer b i{font-style:normal;color:#D0112B}' +
+      '@media(max-width:820px){.grid{grid-template-columns:1fr;padding:34px 0 40px}.feat{grid-template-columns:1fr}}</style></head><body>' +
+      '<section class="hero"><div class="mk">' + markSvg() + '</div><div class="wrap"><div class="top"><div class="lg">' + logoSvg() + '</div><div class="tag">' + esc(k.ad || "") + '</div></div>' +
+      '<div class="grid"><div>' + (pct ? '<div class="badge">Bu linke özel %' + pct + " indirim</div><br>" : "") +
+      '<h1>Size özel tankerin <em>ilk adımı</em></h1><p class="lead">Tankerinizi 3D olarak yapılandırın, her seçimin fiyata etkisini anında görün. Teklif talebiniz tek tıkla OKT satış ekibine ulaşsın.</p>' +
+      '<a class="cta" href="' + esc(url) + '">Konfigüratörü aç →</a></div>' +
+      '<div class="qr"><b>Telefonla okutun</b>' + qr + "<small>Kameranızı QR koda tutun</small></div></div></div></section>" +
+      '<div class="wrap"><div class="feat"><div class="f"><b>3D yapılandırma</b><p>LPG, akaryakıt, kimyasal, gıda ve bitüm tankerleri, silobas ve damper. Her seçenek modelde anında görünür.</p></div>' +
+      '<div class="f"><b>Anında fiyat</b><p>Hacim, şasi, ekipman ve opsiyon seçtikçe fiyat ve teknik özet güncellenir.</p></div>' +
+      '<div class="f"><b>Tek tıkla teklif</b><p>Yapılandırmanız şifreli PDF olarak hazırlanır ve satış ekibimize iletilir.</p></div></div></div>' +
+      '<footer><b>Doğru n<i>OKT</i>a</b><br>© ' + new Date().getFullYear() + " OKT Trailer · Tüm hakları saklıdır.</footer></body></html>";
+  }
+  function showPage(k) {
+    var html = landingHtml(k);
+    var o = modal('<div class="ox-row" style="justify-content:space-between;margin-bottom:10px"><h2 style="margin:0;font:700 26px var(--cond);text-transform:uppercase">Kampanya sayfası · ' + esc(k.ad || k.kod) + '</h2><div class="ox-row" style="margin:0"><button type="button" class="ox-btn pri" id="lpDl">⬇ Sayfayı indir (.html)</button><button type="button" class="ox-btn" id="lpOpen">Yeni sekmede aç ↗</button><button type="button" class="ox-btn" data-x>Kapat</button></div></div>' +
+      '<p style="margin:0 0 10px;font-size:13px;color:#646973">OKT tasarımlı, QR kodlu ve konfigüratör butonlu hazır tanıtım sayfası. İndirip web sitenize yükleyebilir, mailde ya da WhatsApp\'ta paylaşabilirsiniz. Butondan ve QR\'dan gelenler <b>' + esc(k.kod) + "</b> kampanyasına sayılır.</p>" +
+      '<iframe id="lpFr" style="width:100%;height:68vh;border:1px solid #E2E5E9;background:#fff"></iframe>', true);
+    o.querySelector("#lpFr").srcdoc = html;
+    o.querySelector("#lpDl").onclick = function () { var b = new Blob([html], { type: "text/html;charset=utf-8" }), n = "OKT_Kampanya_" + k.kod + ".html"; try { C().Fs(b, n); } catch (e) { var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = n; a.click(); } };
+    o.querySelector("#lpOpen").onclick = function () { var w = window.open(URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" })), "_blank"); if (!w) toast("Açılır pencere engellendi"); };
+  }
+  function showEmbed(k) {
+    var url = campUrl(k);
+    var frame = '<iframe src="' + url + '" title="OKT Ürün Konfigüratörü" width="100%" height="820" style="border:0;max-width:100%" allow="fullscreen" loading="lazy"></iframe>';
+    var button = '<a href="' + url + '" target="_blank" rel="noopener" style="display:inline-block;background:#D0112B;color:#fff;font:700 17px Arial,sans-serif;padding:15px 26px;border-radius:4px;text-decoration:none">Size özel tankerin ilk adımı →</a>';
+    var o = modal('<div class="ox-row" style="justify-content:space-between;margin-bottom:6px"><h2 style="margin:0;font:700 26px var(--cond);text-transform:uppercase">Web sitesine göm</h2><button type="button" class="ox-btn" data-x>Kapat</button></div>' +
+      '<p style="margin:0 0 14px;font-size:13.5px;color:#646973">Bu kodları OKT\'nin ya da bir bayinin web sitesine yapıştırın. Gelen ziyaretçiler <b>' + esc(k.kod) + "</b> kampanyasına sayılır ve bildirimleri size düşer.</p>" +
+      '<h3 style="margin:0 0 6px;font:700 17px var(--cond);text-transform:uppercase">1 · Konfigüratörü sayfanın içine yerleştir</h3><textarea class="ox-in" readonly rows="3" style="width:100%;font:12.5px ui-monospace,Menlo,Consolas,monospace">' + esc(frame) + '</textarea><div class="ox-row" style="margin:8px 0 18px"><button type="button" class="ox-btn dk" id="emA">Kodu kopyala</button></div>' +
+      '<h3 style="margin:0 0 6px;font:700 17px var(--cond);text-transform:uppercase">2 · Sadece buton koy</h3><div style="margin:0 0 10px">' + button + '</div><textarea class="ox-in" readonly rows="3" style="width:100%;font:12.5px ui-monospace,Menlo,Consolas,monospace">' + esc(button) + '</textarea><div class="ox-row" style="margin:8px 0 0"><button type="button" class="ox-btn dk" id="emB">Kodu kopyala</button></div>');
+    o.querySelector("#emA").onclick = function (e) { copyText(frame, e.currentTarget); };
+    o.querySelector("#emB").onclick = function (e) { copyText(button, e.currentTarget); };
+  }
+  function pageCamp(el) {
+    var X = C().Xt; X.settings = X.settings || {}; var list = X.settings.kampanyalar || (X.settings.kampanyalar = []);
+    if (!list.length) { list.push({ kod: "mobil-webasto", ad: "Mobil Webasto e-posta kampanyası", pct: 0, aktif: true }); }
+    var L = acts();
+    function stat(kod) { var g = {}, t = 0, n = 0; L.forEach(function (a) { if (String(a.kampanya || "").toLowerCase() !== String(kod).toLowerCase()) return; if (a.type === "giris") g[pkey(a)] = 1; if (a.type === "teklif") { n++; t += a.toplam || 0; } }); return { g: Object.keys(g).length, n: n, t: t }; }
+    function save() { C().ho(); try { C().gf(); } catch (e) {} toast("Kampanyalar kaydedildi"); }
+    el.innerHTML = '<div class="ox-h1 sub"><small>Her kampanyanın kendi linki olur. O linkten gelenler kampanyaya sayılır ve tanımladığınız indirim fiyata otomatik yansır.</small></div>' +
+      '<div class="ox-card"><h3>Kampanyalar <button type="button" class="ox-btn pri" id="oxCAdd">+ Yeni kampanya</button></h3>' +
+      '<div style="overflow:visible"><table class="ox-tbl"><thead><tr><th>Durum</th><th>Kampanya</th><th class="r">İndirim</th><th class="r">Giriş</th><th class="r">Teklif</th><th class="r">Tutar</th><th>Link ve paylaşım</th><th></th></tr></thead><tbody>' +
+      list.map(function (k, i) {
+        var s = stat(k.kod), url = campUrl(k), on = k.aktif !== false;
+        return '<tr data-i="' + i + '"' + (on ? "" : ' style="opacity:.6"') + '><td><label style="display:flex;gap:6px;align-items:center;font-size:13px;cursor:pointer"><input type="checkbox" data-f="aktif"' + (on ? " checked" : "") + "> " + (on ? '<span class="ox-pill" style="--c:#2F855A">Aktif</span>' : '<span class="ox-pill" style="--c:#989DA6">Pasif</span>') + "</label></td>" +
+          '<td><input class="ox-in" data-f="ad" value="' + esc(k.ad) + '" style="width:230px;font-weight:600"><div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:#646973">kod: <input class="ox-in" data-f="kod" value="' + esc(k.kod) + '" style="width:140px;padding:4px 7px;font-size:12px"></div></td>' +
+          '<td class="r" style="white-space:nowrap">%<input class="ox-in" data-f="pct" value="' + esc(k.pct) + '" inputmode="decimal" style="width:56px;text-align:right"></td>' +
+          '<td class="r">' + s.g + '</td><td class="r">' + s.n + '</td><td class="r"><b>' + eur(s.t) + "</b></td>" +
+          '<td><div style="font-size:11.5px;color:#646973;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:6px" title="' + esc(url) + '">' + esc(url.replace(/^https:\/\//, "")) + '</div>' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ox-btn sm" data-a="copy">🔗 Linki kopyala</button><button type="button" class="ox-btn sm" data-a="qr">▦ QR kod</button><button type="button" class="ox-btn sm" data-a="page">▤ Sayfa oluştur</button><button type="button" class="ox-btn sm" data-a="embed">&lt;/&gt; Göm</button>' +
+          '<a class="ox-btn sm" style="background:#25D366;border-color:#25D366;color:#fff" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent("OKT Trailer konfigüratörü ile tankerinizi 3D yapılandırın, fiyatı anında görün" + (Number(k.pct) ? " (bu linke özel %" + k.pct + " indirim)" : "") + ": " + url) + '">WhatsApp</a></div></td>' +
+          '<td><button type="button" class="ox-btn sm" data-del title="Sil">Sil</button></td></tr>';
+      }).join("") +
+      '</tbody></table></div><p style="font-size:12.5px;color:#646973;margin:12px 0 0">İndirim, müşterinin iskonto grubuna <b>ek olarak</b> uygulanır. <b>QR kod</b> fuar standı ve broşür için, <b>Sayfa oluştur</b> hazır tanıtım sayfası için, <b>Göm</b> konfigüratörü bir web sitesine yerleştirmek içindir.</p></div>';
+    el.querySelectorAll("tr[data-i]").forEach(function (tr) {
+      var k = list[Number(tr.dataset.i)];
+      tr.querySelectorAll("[data-f]").forEach(function (inp) { inp.onchange = function () { var f = inp.dataset.f; k[f] = f === "aktif" ? inp.checked : f === "pct" ? Math.max(0, Math.min(90, Number(String(inp.value).replace(",", ".")) || 0)) : f === "kod" ? inp.value.trim().toLowerCase().replace(/[^a-z0-9ğüşıöç-]+/g, "-").replace(/^-+|-+$/g, "") || k.kod : inp.value.trim(); save(); pageCamp(el); }; });
+      tr.querySelector("[data-del]").onclick = function (e) { var b = e.currentTarget; if (!b.dataset.armed) { b.dataset.armed = 1; b.textContent = "Emin misiniz?"; return; } list.splice(Number(tr.dataset.i), 1); save(); pageCamp(el); };
+      tr.querySelectorAll("[data-a]").forEach(function (b) {
+        b.onclick = function () { var a = b.dataset.a; if (a === "copy") copyText(campUrl(k), b); else if (a === "qr") showQr(k.kod, k.ad); else if (a === "page") showPage(k); else if (a === "embed") showEmbed(k); };
+      });
+    });
+    document.getElementById("oxCAdd").onclick = function () { list.push({ kod: "kampanya-" + (list.length + 1), ad: "Yeni kampanya", pct: 0, aktif: true }); save(); pageCamp(el); };
+  }
 
   /* ---------- ÖRNEK VERİLER ---------- */
   var K_DEMO = "okt-ornek", K_DEMO_OFF = "okt-ornek-kapali";
