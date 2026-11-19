@@ -448,7 +448,7 @@ body.present .main{grid-template-columns:1fr} body.present .panel,body.present .
       <div class="gerr" id="mErr" role="alert"></div>
       <button type="submit" class="nbtn primary" id="mBtn">Giriş yap</button>
       <button type="button" class="gswitch" id="toStaff">Yönetici / satış girişi</button>
-      <button type="button" class="nbtn" id="admOpen" style="width:100%;margin-top:10px;background:#fff;color:#202329;border:1px solid #202329">🔒 Yönetici girişi</button><div id="admPw" hidden style="margin-top:10px;padding:12px;border:1px solid #c9ccd2;border-radius:6px;background:#f6f7f8"><label for="admPwIn" style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Yönetici şifresi</label><div style="display:flex;gap:8px"><input id="admPwIn" type="password" autocomplete="current-password" style="flex:1;padding:10px 11px;border:1px solid #c9ccd2;border-radius:6px;font:inherit"><button type="button" id="admPwGo" class="nbtn primary">Aç</button></div><div id="admPwErr" style="color:#D0112B;font-size:12.5px;margin-top:6px;min-height:16px"></div></div><p style="margin:14px 0 0;font-size:11px;line-height:1.4;color:#8a8f98;text-align:center">© 2026 OKT Trailer · Tüm hakları saklıdır. İzinsiz kopyalanamaz ve çoğaltılamaz.</p>
+      <button type="button" class="nbtn" id="admOpen" style="width:100%;margin-top:10px;background:#fff;color:#202329;border:1px solid #202329">🔒 Yönetici girişi</button><div id="admPw" hidden style="margin-top:10px;padding:12px;border:1px solid #c9ccd2;border-radius:6px;background:#f6f7f8"><div id="admStep1"><label for="admPwIn" style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">1/2 · Yönetici şifresi</label><div style="display:flex;gap:8px"><input id="admPwIn" type="password" autocomplete="current-password" style="flex:1;min-width:0;padding:10px 11px;border:1px solid #c9ccd2;border-radius:6px;font:inherit"><button type="button" id="admPwGo" class="nbtn primary">Devam</button></div></div><div id="admStep2" hidden><div style="font-size:13px;font-weight:600;margin-bottom:4px">2/2 · E-posta onayı</div><div style="font-size:12.5px;color:#4f5560;margin-bottom:8px">Onay kodu <b id="admMail">s•••••••••@gmail.com</b> adresine gönderildi. Mailinizdeki 6 haneli kodu girin.</div><div style="display:flex;gap:8px"><input id="admCodeIn" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" style="flex:1;min-width:0;padding:10px 11px;border:1px solid #c9ccd2;border-radius:6px;font:inherit" ><button type="button" id="admCodeGo" class="nbtn primary">Doğrula</button></div><div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px"><button type="button" id="admResend" class="lnk" style="background:none;border:0;padding:0;color:#D0112B;cursor:pointer;font:inherit">Kodu tekrar gönder</button><button type="button" id="admCancel" style="background:none;border:0;padding:0;color:#646973;cursor:pointer;font:inherit">İptal</button></div></div><div id="admPwErr" style="color:#D0112B;font-size:12.5px;margin-top:6px;min-height:16px"></div></div><p style="margin:14px 0 0;font-size:11px;line-height:1.4;color:#8a8f98;text-align:center">© 2026 OKT Trailer · Tüm hakları saklıdır. İzinsiz kopyalanamaz ve çoğaltılamaz.</p>
     </form>
     <form class="gbox" id="gForm" autocomplete="off" hidden>
       <div class="glabel" id="gLabel"></div>
@@ -5373,6 +5373,53 @@ var OKTQR = (function () {
   window.__oktAdm = { nav: nav, render: render, refresh: refresh };
 })();
 </script>
-<script id="okt-admpw">(function(){var H="9c56519fc4ead4ced25e3c2572ff77c53eacba4fc631a9c4c2b59e35b846848a";try{if(sessionStorage.getItem("okt-adm-ok")===H)window.__oktAdmOk=true}catch(e){}async function sha(t){var b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}var tries=0,lockUntil=0;window.__oktAskPw=function(){var box=document.getElementById("admPw");if(!box)return;box.hidden=false;var i=document.getElementById("admPwIn"),g=document.getElementById("admPwGo"),er=document.getElementById("admPwErr");i.focus();async function go(){if(Date.now()<lockUntil){er.textContent="Çok fazla deneme. Biraz bekleyin.";return}var ok=(await sha("okt-panel|"+i.value))===H;if(ok){window.__oktAdmOk=true;try{sessionStorage.setItem("okt-adm-ok",H)}catch(e){}box.hidden=true;i.value="";document.getElementById("admOpen").click()}else{tries++;i.value="";er.textContent="Şifre hatalı.";if(tries>=5){lockUntil=Date.now()+60000;tries=0;er.textContent="5 hatalı deneme. 1 dakika bekleyin."}i.focus()}}g.onclick=go;i.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();go()}}};})();</script>
+<script id="okt-admpw">(function(){
+var H="9c56519fc4ead4ced25e3c2572ff77c53eacba4fc631a9c4c2b59e35b846848a",OK="okt-adm-2fa",MAIL="sabihaozkardes@gmail.com",TTL=10*60000;
+try{if(sessionStorage.getItem(OK)===H+"|2fa")window.__oktAdmOk=true}catch(e){}
+function $(i){return document.getElementById(i)}
+async function sha(t){var b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}
+function rnd(){var a=new Uint32Array(2);crypto.getRandomValues(a);return a}
+var pwTries=0,lockUntil=0,codeHash="",salt="",exp=0,codeTries=0,lastSend=0,timer=null;
+function err(t,ok){var e=$("admPwErr");e.style.color=ok?"#2F855A":"#D0112B";e.textContent=t||""}
+function step(n){$("admStep1").hidden=n!==1;$("admStep2").hidden=n!==2;(n===1?$("admPwIn"):$("admCodeIn")).focus()}
+function device(){var u=navigator.userAgent;var os=/Windows/.test(u)?"Windows":/Mac OS/.test(u)?"macOS":/Android/.test(u)?"Android":/iPhone|iPad/.test(u)?"iOS":"Diğer";var br=/Edg\//.test(u)?"Edge":/Chrome\//.test(u)?"Chrome":/Safari\//.test(u)?"Safari":/Firefox\//.test(u)?"Firefox":"Tarayıcı";return br+" · "+os}
+async function sendCode(){
+  var now=Date.now();if(now-lastSend<45000){var w=Math.ceil((45000-(now-lastSend))/1000);err("Yeni kod için "+w+" sn bekleyin.");return false}
+  var a=rnd(),code=String(a[0]%1000000).padStart(6,"0");salt=String(a[1]);codeHash=await sha(salt+"|"+code);exp=now+TTL;codeTries=0;lastSend=now;
+  var when=new Date().toLocaleString("tr-TR"),where=/^https?:/.test(location.protocol)?location.origin+location.pathname:(location.protocol==="file:"?"Bilgisayardan açılan dosya":"Mail taslağı içinden");
+  var body={_subject:"OKT Yönetim Paneli · giriş onay kodu: "+code,_template:"table",_captcha:"false",
+    "Onay kodu":code,"Geçerlilik":"10 dakika (tek kullanımlık)","Giriş isteği zamanı":when,"Cihaz":device(),"Nereden":where,
+    "Uyarı":"Bu girişi siz ya da yetki verdiğiniz biri başlatmadıysa kodu kimseyle paylaşmayın ve yönetici şifresini değiştirin.",
+    Mesaj:"OKT Yönetim Paneli için giriş isteği alındı.\n\nOnay kodu: "+code+"\nGeçerlilik: 10 dakika\nZaman: "+when+"\nCihaz: "+device()+"\nNereden: "+where};
+  code="";
+  try{var r=await fetch("https://formsubmit.co/ajax/"+encodeURIComponent(MAIL),{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(body)});
+    var j=await r.json().catch(function(){return{}});if(!r.ok||String(j.success)==="false")throw new Error(j.message||("HTTP "+r.status));return true}
+  catch(e){codeHash="";lastSend=0;err("Onay kodu gönderilemedi. İnternet bağlantısını kontrol edip tekrar deneyin.");console.warn(e);return false}
+}
+function resendTick(){var b=$("admResend");clearInterval(timer);timer=setInterval(function(){var w=Math.ceil((45000-(Date.now()-lastSend))/1000);if(w>0){b.disabled=true;b.style.opacity=.5;b.textContent="Kodu tekrar gönder ("+w+")"}else{b.disabled=false;b.style.opacity=1;b.textContent="Kodu tekrar gönder";clearInterval(timer)}},500)}
+window.__oktAskPw=function(){
+  var box=$("admPw");if(!box)return;box.hidden=false;step(codeHash&&Date.now()<exp?2:1);
+  var pi=$("admPwIn"),ci=$("admCodeIn");
+  async function goPw(){if(Date.now()<lockUntil){err("Çok fazla deneme. Biraz bekleyin.");return}
+    var ok=(await sha("okt-panel|"+pi.value))===H;pi.value="";
+    if(!ok){pwTries++;err("Şifre hatalı.");if(pwTries>=5){lockUntil=Date.now()+60000;pwTries=0;err("5 hatalı deneme. 1 dakika bekleyin.")}pi.focus();return}
+    pwTries=0;$("admPwGo").disabled=true;err("Onay kodu gönderiliyor…",true);
+    var sent=await sendCode();$("admPwGo").disabled=false;
+    if(sent){err("Kod gönderildi. Mailinizi kontrol edin (Spam klasörüne de bakın).",true);step(2);resendTick()}}
+  async function goCode(){var v=(ci.value||"").replace(/\D/g,"");
+    if(!codeHash){err("Önce şifreyi girin.");step(1);return}
+    if(Date.now()>exp){codeHash="";err("Kodun süresi doldu. Yeni kod isteyin.");return}
+    if(v.length!==6){err("6 haneli kodu girin.");return}
+    var ok=(await sha(salt+"|"+v))===codeHash;ci.value="";
+    if(!ok){codeTries++;if(codeTries>=5){codeHash="";err("5 hatalı kod. Yeni kod isteyin.");step(1)}else err("Kod hatalı. Kalan deneme: "+(5-codeTries));ci.focus();return}
+    codeHash="";window.__oktAdmOk=true;try{sessionStorage.setItem(OK,H+"|2fa")}catch(e){}
+    err("");box.hidden=true;$("admOpen").click()}
+  $("admPwGo").onclick=goPw;pi.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();goPw()}};
+  $("admCodeGo").onclick=goCode;ci.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();goCode()}};
+  ci.oninput=function(){ci.value=ci.value.replace(/\D/g,"").slice(0,6);if(ci.value.length===6)goCode()};
+  $("admResend").onclick=async function(){err("Yeni kod gönderiliyor…",true);if(await sendCode()){err("Yeni kod gönderildi.",true);resendTick()}};
+  $("admCancel").onclick=function(){codeHash="";err("");step(1);box.hidden=true};
+};
+})();</script>
 <script id="okt-guard">(function(){function ed(t){return t&&t.closest&&t.closest("input,textarea,[contenteditable]")}document.addEventListener("contextmenu",function(e){if(!ed(e.target))e.preventDefault()});document.addEventListener("keydown",function(e){var k=(e.key||"").toLowerCase();if((e.ctrlKey||e.metaKey)&&(k==="s"||k==="u"||(e.shiftKey&&(k==="i"||k==="j"||k==="c")))){e.preventDefault()}if(k==="f12")e.preventDefault()});document.addEventListener("dragstart",function(e){if(e.target&&e.target.tagName==="IMG")e.preventDefault()});})();</script>
 </body></html>
