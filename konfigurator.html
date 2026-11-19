@@ -5276,36 +5276,187 @@ var OKTQR = (function () {
     o.querySelector("#emA").onclick = function (e) { copyText(frame, e.currentTarget); };
     o.querySelector("#emB").onclick = function (e) { copyText(button, e.currentTarget); };
   }
+
+  /* ---------- KANALLAR ---------- */
+  var CH = [
+    { id: "eposta", ad: "E-posta", renk: "#1B1C20", ic: "✉", amac: "Müşteri ve bayi listenize kişisel davet. Tıklanabilir buton, kişiselleştirilebilir metin.", kod: "eposta" },
+    { id: "whatsapp", ad: "WhatsApp", renk: "#25D366", ic: "💬", amac: "Birebir ve grup mesajı, durum (hikâye) paylaşımı. Kısa, samimi dil.", kod: "whatsapp" },
+    { id: "linkedin", ad: "LinkedIn", renk: "#0A66C2", ic: "in", amac: "Filo yöneticileri ve karar vericiler. Kurumsal, veri odaklı dil.", kod: "linkedin" },
+    { id: "facebook", ad: "Facebook", renk: "#1877F2", ic: "f", amac: "Geniş kitle, nakliyeci ve sektör grupları. Görsel ağırlıklı.", kod: "facebook" },
+    { id: "instagram", ad: "Instagram", renk: "#E1306C", ic: "◎", amac: "Görsel tanıtım. Gönderilerde link tıklanmaz: QR'lı görsel + profil linki + hikâye link çıkartması.", kod: "instagram" },
+    { id: "fuar", ad: "Fuar & basılı", renk: "#D0112B", ic: "▦", amac: "Stant, broşür, kartvizit, masa kartı. Ziyaretçi QR'ı okutup stanttan yapılandırır.", kod: "fuar" },
+    { id: "web", ad: "Web sitesi & bayi", renk: "#646973", ic: "</>", amac: "OKT veya bayi sitesine konfigüratörü göm, buton koy ya da hazır kampanya sayfası yayınla.", kod: "web" }
+  ];
+  var CHM = {}; CH.forEach(function (c) { CHM[c.id] = c; });
+  function guessCh(k) { var x = (k.kanal || "") + " " + (k.kod || "") + " " + (k.ad || ""); x = x.toLowerCase(); if (k.kanal && CHM[k.kanal]) return k.kanal; x = x.replace(/webasto/g, ""); if (/e-?posta|mail|b[üu]lten/.test(x)) return "eposta"; if (/whats/.test(x)) return "whatsapp"; if (/linked/.test(x)) return "linkedin"; if (/face|fb/.test(x)) return "facebook"; if (/insta|ig\b/.test(x)) return "instagram"; if (/fuar|stant|bro[şs]|bas[ıi]l/.test(x)) return "fuar"; if (/web|site|bayi|g[öo]m/.test(x)) return "web"; return "eposta"; }
+
+  /* ---- metin sürümleri ---- */
+  function texts(ch, k) {
+    var url = campUrl(k), pct = Number(k.pct) || 0, ind = pct ? " Bu linke özel %" + pct + " indirim." : "", indK = pct ? " (%" + pct + " indirimli)" : "";
+    var tags = "#OKTTrailer #Tanker #Lojistik #Taşımacılık #MobilWebasto #DoğruNokta";
+    switch (ch) {
+      case "eposta": return [
+        ["Konu satırı", "Size özel tankerin ilk adımı: 3D yapılandırın, fiyatı anında görün" + (pct ? " · %" + pct + " indirim" : "")],
+        ["Mail metni", "Merhaba [Ad Soyad],\n\nOKT Trailer olarak tanker ve treyler ihtiyacınızı artık çevrim içi yapılandırabilirsiniz. LPG, akaryakıt, kimyasal, gıda ve bitüm tankerlerinden silobas ve dampere kadar tüm ürünlerimizi 3D model üzerinde seçenek seçenek oluşturabilir, her seçimin fiyata etkisini anında görebilirsiniz." + (pct ? "\n\nBu davete özel %" + pct + " indirim fiyatınıza otomatik yansır." : "") + "\n\nKonfigüratörü açmak için: " + url + "\n\nTeklif talebiniz tek tıkla satış ekibimize ulaşır; en kısa sürede sizinle iletişime geçeriz.\n\nSaygılarımızla,\nOKT Trailer Satış Ekibi\n0850 850 1 658"],
+        ["İmza / mail butonu (HTML)", '<a href="' + url + '" style="display:inline-block;background:#D0112B;color:#ffffff;font:700 16px Arial,sans-serif;padding:14px 24px;border-radius:4px;text-decoration:none">Size özel tankerin ilk adımı →</a>']
+      ];
+      case "whatsapp": return [
+        ["Birebir mesaj", "Merhaba 👋 OKT Trailer'dan yazıyorum. Tankerinizi artık 3D olarak kendiniz yapılandırıp fiyatını anında görebilirsiniz" + indK + ". Bir göz atmak ister misiniz? 👇\n" + url],
+        ["Grup mesajı", "🚛 OKT Trailer konfigüratörü yayında!\nLPG, akaryakıt, gıda, bitüm, kimyasal tanker, silobas, damper…\n✅ 3D yapılandırma\n✅ Anında fiyat\n✅ Tek tıkla teklif" + (pct ? "\n🎁 Bu linke özel %" + pct + " indirim" : "") + "\n👉 " + url],
+        ["Durum (hikâye) metni", "Tankerini 3D yapılandır, fiyatı anında gör 👉 " + url]
+      ];
+      case "linkedin": return [
+        ["Kurumsal gönderi", "Tanker yatırımında doğru karar, doğru yapılandırmayla başlar.\n\nOKT Trailer Ürün Konfigüratörü ile filonuz için LPG, akaryakıt, kimyasal, gıda ve bitüm tankerlerini; silobas ve damper treylerleri 3D model üzerinde adım adım yapılandırabilir, hacim, şasi, ekipman ve opsiyon seçimlerinin fiyata etkisini anında görebilirsiniz.\n\n▪ Teknik özet ve fiyat seçim yaptıkça güncellenir\n▪ Isı kritik yükler için Mobil Webasto çözümü\n▪ Teklif talebi tek tıkla satış ekibimize ulaşır" + (pct ? "\n\nBu paylaşıma özel %" + pct + " indirim." : "") + "\n\nKonfigüratör: " + url + "\n\n" + tags],
+        ["Kısa gönderi", "Tankerinizi 3D yapılandırın, fiyatı anında görün." + ind + "\n👉 " + url + "\n\n#OKTTrailer #Tanker #Filo"],
+        ["Bağlantı isteği / mesaj", "Merhaba [Ad], filo yatırımlarınızda işinize yarayabilir: OKT Trailer konfigüratörüyle tankerinizi 3D yapılandırıp fiyatı anında görebilirsiniz. " + url]
+      ];
+      case "facebook": return [
+        ["Gönderi", "🚛 Size özel tankerin ilk adımı!\n\nOKT Trailer konfigüratörüyle tankerinizi 3D olarak kendiniz yapılandırın; her seçimin fiyata etkisini anında görün." + (pct ? "\n🎁 Bu linke özel %" + pct + " indirim!" : "") + "\n\n👉 " + url + "\n\n" + tags],
+        ["Grup paylaşımı", "Merhaba arkadaşlar, tanker / treyler bakanlar için faydalı olabilir: OKT Trailer'ın konfigüratöründe aracınızı 3D yapılandırıp fiyatı anında görebiliyorsunuz. " + url]
+      ];
+      case "instagram": return [
+        ["Gönderi açıklaması", "Size özel tankerin ilk adımı 🚛\n\nTankerinizi 3D yapılandırın, fiyatı anında görün. Görseldeki QR'ı okutun ya da profilimizdeki linke dokunun 🔗" + (pct ? "\n🎁 Bu linke özel %" + pct + " indirim" : "") + "\n\n" + tags + " #Treyler #Silobas #Damper"],
+        ["Hikâye metni (link çıkartmasıyla)", "Tankerini yapılandır 👉 (link çıkartması: " + url + ")"],
+        ["Profil (biyografi) linki", url]
+      ];
+      case "fuar": return [
+        ["Broşür / stant metni", "SİZE ÖZEL TANKERİN İLK ADIMI\nQR kodu okutun, tankerinizi 3D yapılandırın, fiyatı anında görün." + (pct ? "\nFuara özel %" + pct + " indirim." : "") + "\nOKT Trailer · Doğru nOKTa"],
+        ["Kartvizit arkası", "Tankerinizi yapılandırın → QR'ı okutun"]
+      ];
+      default: return [["Kısa tanıtım", "OKT Trailer Ürün Konfigüratörü: tankerinizi 3D yapılandırın, fiyatı anında görün. " + url]];
+    }
+  }
+  var VIS = {
+    eposta: [["Mail üst görseli", 1200, 400]],
+    whatsapp: [["Durum (hikâye)", 1080, 1920], ["Kare görsel", 1080, 1080]],
+    linkedin: [["Gönderi görseli", 1200, 627]],
+    facebook: [["Gönderi görseli", 1200, 630], ["Kare görsel", 1080, 1080]],
+    instagram: [["Gönderi (kare)", 1080, 1080], ["Gönderi (dikey)", 1080, 1350], ["Hikâye", 1080, 1920]],
+    fuar: [["A4 afiş", 1240, 1754], ["Masa kartı", 1200, 800]],
+    web: [["Site afişi", 1600, 500]]
+  };
+  function shareLinks(ch, k) {
+    var url = campUrl(k), t = texts(ch, k);
+    if (ch === "eposta") return [["Mail uygulamasında aç", "mailto:?subject=" + encodeURIComponent(t[0][1]) + "&body=" + encodeURIComponent(t[1][1]), "#1B1C20"]];
+    if (ch === "whatsapp") return [["WhatsApp'ta paylaş", "https://wa.me/?text=" + encodeURIComponent(t[0][1]), "#25D366"]];
+    if (ch === "linkedin") return [["LinkedIn'de paylaş", "https://www.linkedin.com/sharing/share-offsite/?url=" + encodeURIComponent(url), "#0A66C2"]];
+    if (ch === "facebook") return [["Facebook'ta paylaş", "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url), "#1877F2"]];
+    return [];
+  }
+
+  /* ---- görsel üretici (canvas) ---- */
+  function svgImg(markup, color) {
+    var s = markup.replace(/currentColor/g, color).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ');
+    return new Promise(function (res) { var i = new Image(); i.onload = function () { res(i); }; i.onerror = function () { res(null); }; i.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(s); });
+  }
+  function wrap(g, text, maxW) { var words = text.split(" "), lines = [], cur = ""; words.forEach(function (w) { var t = cur ? cur + " " + w : w; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }); if (cur) lines.push(cur); return lines; }
+  async function drawVisual(canvas, w, h, k, ch) {
+    try { await Promise.all([document.fonts.load('700 80px "Barlow Condensed"'), document.fonts.load('500 30px "Barlow"')]); } catch (e) {}
+    canvas.width = w; canvas.height = h; var g = canvas.getContext("2d"), R = "#D0112B", G = "#1B1C20";
+    var u = Math.min(w, h) / 1080, portrait = h > w * 1.15, wide = w > h * 1.6, pct = Number(k.pct) || 0;
+    var cond = '"Barlow Condensed","Arial Narrow",Arial,sans-serif', body = 'Barlow,Arial,sans-serif';
+    g.fillStyle = G; g.fillRect(0, 0, w, h);
+    var mk = await svgImg((MARK || "").replace("<svg ", '<svg width="162" height="148" '), "#ffffff");
+    if (mk) { g.globalAlpha = .07; var ms = (wide ? h * 1.6 : Math.max(w, h) * .85); g.drawImage(mk, w - ms * .78, h * (portrait ? .42 : .08), ms, ms * 148 / 162); g.globalAlpha = 1; }
+    var lg = await svgImg((LOGO || "").replace("<svg ", '<svg width="754" height="148" '), "#ffffff");
+    var pad = (wide ? h * .12 : 72 * u), lh = (wide ? h * .11 : 54 * u);
+    if (lg) g.drawImage(lg, pad, pad, lh * 754 / 148, lh);
+    g.fillStyle = R; g.fillRect(0, h - 12 * u, w, 12 * u);
+    // QR
+    var showQr = ch === "instagram" || ch === "fuar" || ch === "whatsapp" || portrait, qs = 0, qx = 0, qy = 0;
+    if (showQr || (!wide && ch !== "eposta")) {
+      qs = portrait ? w * .46 : wide ? h * .62 : Math.min(w, h) * .34;
+      qx = portrait ? (w - qs) / 2 : w - qs - pad; qy = portrait ? h - qs - 210 * u : (h - qs) / 2 + (wide ? 0 : 30 * u);
+      var M = OKTQR.build(campUrl(k)), N = M.length, bp = qs * .07, cs = (qs - 2 * bp) / N;
+      g.fillStyle = "#fff"; g.fillRect(qx, qy, qs, qs); g.fillStyle = G;
+      for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) if (M[r][c]) g.fillRect(Math.floor(qx + bp + c * cs), Math.floor(qy + bp + r * cs), Math.ceil(cs), Math.ceil(cs));
+      var bl = qs * .12, bw = Math.max(4, qs * .018); g.fillStyle = R;
+      g.fillRect(qx - bw, qy - bw, bl, bw); g.fillRect(qx - bw, qy - bw, bw, bl); g.fillRect(qx + qs + bw - bl, qy + qs, bl, bw); g.fillRect(qx + qs, qy + qs + bw - bl, bw, bl);
+      g.fillStyle = "rgba(255,255,255,.75)"; g.font = "600 " + Math.round((wide ? h * .045 : 26 * u)) + "px " + body; g.textAlign = "center";
+      g.fillText(ch === "instagram" ? "QR'ı okut · link profilde" : "Okut, yapılandır", qx + qs / 2, qy + qs + (wide ? h * .085 : 52 * u)); g.textAlign = "left";
+    }
+    // başlık
+    var tx = pad, tw = (qs && !portrait ? qx - pad * 2 : wide ? w * .58 : w - pad * 2), ty = portrait ? h * .2 : wide ? h * .42 : h * .3;
+    if (pct) { var bs = Math.round((wide ? h * .065 : 30 * u)); g.font = "700 " + bs + "px " + body; var bt = (ch === "fuar" ? "Fuara özel %" : "Bu linke özel %") + pct + " indirim", bwid = g.measureText(bt).width + bs * 1.2; g.fillStyle = "#fff"; g.fillRect(tx, ty - bs * 1.55, bwid, bs * 1.7); g.fillStyle = R; g.fillRect(tx, ty - bs * 1.55, bs * .22, bs * 1.7); g.fillText(bt, tx + bs * .6, ty - bs * .45); ty += bs * .9; }
+    var fs = portrait ? 118 * u : wide ? h * .17 : (w > h ? 92 * u : 104 * u);
+    g.font = "700 " + Math.round(fs) + "px " + cond; g.textBaseline = "alphabetic";
+    var l1 = wrap(g, "SİZE ÖZEL TANKERİN", tw), y = ty + fs;
+    l1.forEach(function (L) { g.fillStyle = "#fff"; g.fillText(L, tx, y); y += fs * .98; });
+    g.fillStyle = R; g.fillText("İLK ADIMI", tx, y); y += fs * .55;
+    var ss = portrait ? 40 * u : wide ? h * .062 : 32 * u; g.font = "500 " + Math.round(ss) + "px " + body; g.fillStyle = "rgba(255,255,255,.82)";
+    wrap(g, "Tankerinizi 3D yapılandırın, fiyatı anında görün.", tw).slice(0, 2).forEach(function (L) { g.fillText(L, tx, y); y += ss * 1.35; });
+    if (!(showQr && portrait) && !wide) {
+      y += ss * .6; var cb = Math.round(ss * 1.05); g.font = "700 " + cb + "px " + body; var ct = ch === "instagram" ? "Link profilde →" : "Konfigüratörü aç →", cw = g.measureText(ct).width + cb * 1.8;
+      g.fillStyle = R; g.fillRect(tx, y, cw, cb * 2.3); g.fillStyle = "#fff"; g.fillText(ct, tx + cb * .9, y + cb * 1.5);
+    }
+    if (portrait) { g.font = "700 " + Math.round(48 * u) + "px " + cond; var p1 = "Doğru n", p2 = "OKT", p3 = "a", w1 = g.measureText(p1).width, w2 = g.measureText(p2).width, w3 = g.measureText(p3).width, sx = (w - w1 - w2 - w3) / 2, sy = h - 70 * u; g.fillStyle = "rgba(255,255,255,.9)"; g.fillText(p1, sx, sy); g.fillStyle = R; g.fillText(p2, sx + w1, sy); g.fillStyle = "rgba(255,255,255,.9)"; g.fillText(p3, sx + w1 + w2, sy); }
+    if (wide && !qs) { var pb = Math.round(h * .07); g.font = "700 " + pb + "px " + body; var pt = ch === "eposta" ? "Hemen yapılandırın →" : "Konfigüratörü aç →", pw = g.measureText(pt).width + pb * 1.8, px = w - pw - pad, py = h / 2 - pb * 1.15; g.fillStyle = R; g.fillRect(px, py, pw, pb * 2.3); g.fillStyle = "#fff"; g.fillText(pt, px + pb * .9, py + pb * 1.5); }
+  }
+
+  /* ---- paylaşım kiti ---- */
+  function showKit(k) {
+    var ch = guessCh(k), C0 = CHM[ch], url = campUrl(k), T = texts(ch, k), V = VIS[ch] || [], S = shareLinks(ch, k);
+    var o = modal('<div class="ox-row" style="justify-content:space-between;margin-bottom:6px"><h2 style="margin:0;font:700 28px var(--cond);text-transform:none;display:flex;align-items:center;gap:12px"><span style="display:inline-grid;place-items:center;width:38px;height:38px;background:' + C0.renk + ';color:#fff;font:700 17px var(--font);text-transform:none">' + C0.ic + '</span><span style="text-transform:none">' + esc(C0.ad) + "</span>&nbsp;· paylaşım kiti</h2>" + '<button type="button" class="ox-btn" data-x>Kapat</button></div>' +
+      '<p style="margin:0 0 14px;font-size:13.5px;color:#646973"><b>' + esc(k.ad) + "</b> · " + esc(C0.amac) + "</p>" +
+      '<div class="ox-row" style="background:#F6F7F8;padding:10px 12px;margin-bottom:16px"><code style="flex:1;font-size:12.5px;word-break:break-all">' + esc(url) + '</code><button type="button" class="ox-btn sm dk" id="kitCopy">🔗 Linki kopyala</button>' + S.map(function (s) { return '<a class="ox-btn sm" style="background:' + s[2] + ';border-color:' + s[2] + ';color:#fff" target="_blank" rel="noopener" href="' + esc(s[1]) + '">' + esc(s[0]) + " ↗</a>"; }).join("") + "</div>" +
+      '<div style="display:grid;grid-template-columns:' + (V.length ? "1fr 1fr" : "1fr") + ';gap:22px;align-items:start"><div>' +
+      '<h3 style="margin:0 0 10px;font:700 18px var(--cond);text-transform:uppercase">Metin sürümleri</h3>' +
+      T.map(function (t, i) { return '<div style="margin-bottom:14px"><div class="ox-row" style="justify-content:space-between;margin:0 0 6px"><b style="font-size:13px">' + esc(t[0]) + '</b><button type="button" class="ox-btn sm" data-ct="' + i + '">Kopyala</button></div><textarea class="ox-in" data-t="' + i + '" rows="' + Math.min(10, Math.max(2, Math.ceil(t[1].length / 70) + (t[1].match(/\n/g) || []).length)) + '" style="width:100%;font-size:13px;line-height:1.45">' + esc(t[1]) + "</textarea></div>"; }).join("") +
+      (ch === "instagram" ? '<div class="ox-warn" style="margin-top:4px">Instagram gönderilerinde link tıklanmaz. Görseldeki QR\'ı kullanın, linki profil biyografinize ekleyin, hikâyede <b>link çıkartması</b> kullanın.</div>' : "") +
+      (ch === "web" ? '<div class="ox-row"><button type="button" class="ox-btn pri" id="kitPage">▤ Kampanya sayfası oluştur</button><button type="button" class="ox-btn dk" id="kitEmbed">&lt;/&gt; Siteye göm</button></div>' : "") +
+      (ch === "fuar" ? '<div class="ox-row"><button type="button" class="ox-btn pri" id="kitQr">▦ Büyük QR (yazdır / PNG)</button><button type="button" class="ox-btn" id="kitPage">▤ Kampanya sayfası</button></div>' : "") +
+      "</div>" + (V.length ? '<div><h3 style="margin:0 0 10px;font:700 18px var(--cond);text-transform:uppercase">Görseller</h3>' + V.map(function (v, i) { return '<div style="margin-bottom:16px"><div class="ox-row" style="justify-content:space-between;margin:0 0 6px"><b style="font-size:13px">' + esc(v[0]) + ' <span style="font-weight:500;color:#646973">' + v[1] + "×" + v[2] + '</span></b><button type="button" class="ox-btn sm pri" data-dl="' + i + '">⬇ PNG indir</button></div><canvas data-v="' + i + '" style="width:100%;max-height:' + (v[2] > v[1] ? "520px" : "none") + ';object-fit:contain;display:block;background:#1B1C20"></canvas></div>'; }).join("") + "</div>" : "") + "</div>", true);
+    o.querySelector("#kitCopy").onclick = function (e) { copyText(url, e.currentTarget); };
+    o.querySelectorAll("[data-ct]").forEach(function (b) { b.onclick = function () { copyText(o.querySelector('[data-t="' + b.dataset.ct + '"]').value, b); }; });
+    var pg = o.querySelector("#kitPage"); if (pg) pg.onclick = function () { showPage(k); };
+    var em = o.querySelector("#kitEmbed"); if (em) em.onclick = function () { showEmbed(k); };
+    var qb = o.querySelector("#kitQr"); if (qb) qb.onclick = function () { showQr(k.kod, k.ad); };
+    V.forEach(function (v, i) {
+      var cv = o.querySelector('[data-v="' + i + '"]'); if (v[2] > v[1]) { cv.style.width = "auto"; cv.style.height = "520px"; cv.style.margin = "0 auto"; }
+      drawVisual(cv, v[1], v[2], k, ch).catch(function (e) { console.warn(e); });
+      o.querySelector('[data-dl="' + i + '"]').onclick = function () { cv.toBlob(function (b) { var n = "OKT_" + k.kod + "_" + v[0].replace(/[^A-Za-z0-9ğüşıöçĞÜŞİÖÇ]+/g, "_") + "_" + v[1] + "x" + v[2] + ".png"; try { C().Fs(b, n); } catch (e) { var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = n; a.click(); } }, "image/png"); };
+    });
+  }
+
+  /* ---- sayfa ---- */
   function pageCamp(el) {
     var X = C().Xt; X.settings = X.settings || {}; var list = X.settings.kampanyalar || (X.settings.kampanyalar = []);
-    if (!list.length) { list.push({ kod: "mobil-webasto", ad: "Mobil Webasto e-posta kampanyası", pct: 0, aktif: true }); }
+    var changed = false; list.forEach(function (k) { if (!k.kanal) { k.kanal = guessCh(k); changed = true; } });
+    if (changed) { try { C().ho(); } catch (e) {} }
     var L = acts();
     function stat(kod) { var g = {}, t = 0, n = 0; L.forEach(function (a) { if (String(a.kampanya || "").toLowerCase() !== String(kod).toLowerCase()) return; if (a.type === "giris") g[pkey(a)] = 1; if (a.type === "teklif") { n++; t += a.toplam || 0; } }); return { g: Object.keys(g).length, n: n, t: t }; }
-    function save() { C().ho(); try { C().gf(); } catch (e) {} toast("Kampanyalar kaydedildi"); }
-    el.innerHTML = '<div class="ox-h1 sub"><small>Her kampanyanın kendi linki olur. O linkten gelenler kampanyaya sayılır ve tanımladığınız indirim fiyata otomatik yansır.</small></div>' +
-      '<div class="ox-card"><h3>Kampanyalar <button type="button" class="ox-btn pri" id="oxCAdd">+ Yeni kampanya</button></h3>' +
-      '<div style="overflow:visible"><table class="ox-tbl"><thead><tr><th>Durum</th><th>Kampanya</th><th class="r">İndirim</th><th class="r">Giriş</th><th class="r">Teklif</th><th class="r">Tutar</th><th>Link ve paylaşım</th><th></th></tr></thead><tbody>' +
-      list.map(function (k, i) {
-        var s = stat(k.kod), url = campUrl(k), on = k.aktif !== false;
-        return '<tr data-i="' + i + '"' + (on ? "" : ' style="opacity:.6"') + '><td><label style="display:flex;gap:6px;align-items:center;font-size:13px;cursor:pointer"><input type="checkbox" data-f="aktif"' + (on ? " checked" : "") + "> " + (on ? '<span class="ox-pill" style="--c:#2F855A">Aktif</span>' : '<span class="ox-pill" style="--c:#989DA6">Pasif</span>') + "</label></td>" +
-          '<td><input class="ox-in" data-f="ad" value="' + esc(k.ad) + '" style="width:230px;font-weight:600"><div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:#646973">kod: <input class="ox-in" data-f="kod" value="' + esc(k.kod) + '" style="width:140px;padding:4px 7px;font-size:12px"></div></td>' +
-          '<td class="r" style="white-space:nowrap">%<input class="ox-in" data-f="pct" value="' + esc(k.pct) + '" inputmode="decimal" style="width:56px;text-align:right"></td>' +
-          '<td class="r">' + s.g + '</td><td class="r">' + s.n + '</td><td class="r"><b>' + eur(s.t) + "</b></td>" +
-          '<td><div style="font-size:11.5px;color:#646973;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:6px" title="' + esc(url) + '">' + esc(url.replace(/^https:\/\//, "")) + '</div>' +
-          '<div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ox-btn sm" data-a="copy">🔗 Linki kopyala</button><button type="button" class="ox-btn sm" data-a="qr">▦ QR kod</button><button type="button" class="ox-btn sm" data-a="page">▤ Sayfa oluştur</button><button type="button" class="ox-btn sm" data-a="embed">&lt;/&gt; Göm</button>' +
-          '<a class="ox-btn sm" style="background:#25D366;border-color:#25D366;color:#fff" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent("OKT Trailer konfigüratörü ile tankerinizi 3D yapılandırın, fiyatı anında görün" + (Number(k.pct) ? " (bu linke özel %" + k.pct + " indirim)" : "") + ": " + url) + '">WhatsApp</a></div></td>' +
-          '<td><button type="button" class="ox-btn sm" data-del title="Sil">Sil</button></td></tr>';
+    function save(msg) { C().ho(); try { C().gf(); } catch (e) {} toast(msg || "Kaydedildi"); }
+    var perCh = CH.map(function (c) { var s = { g: 0, n: 0, t: 0 }; list.filter(function (k) { return k.kanal === c.id; }).forEach(function (k) { var x = stat(k.kod); s.g += x.g; s.n += x.n; s.t += x.t; }); return [c, s]; });
+    var mxG = Math.max.apply(null, [1].concat(perCh.map(function (x) { return x[1].g; })));
+    el.innerHTML = '<div class="ox-h1 sub"><small>Her satış kanalı kendi amacına göre ayrı yapılandırılır: kendi linki, indirimi, metinleri ve görselleri. Hangi kanalın kaç giriş ve teklif getirdiği ayrı ayrı izlenir.</small></div>' +
+      '<div class="ox-card"><h3>Kanal performansı <small>giriş · teklif · teklif tutarı</small></h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">' +
+      perCh.map(function (x) { var c = x[0], s = x[1]; return '<div style="border-top:3px solid ' + c.renk + ';background:#F6F7F8;padding:12px 14px"><div style="font:700 16px var(--cond)">' + esc(c.ad) + '</div><div style="font:700 30px/1.1 var(--cond);margin-top:4px">' + s.g + ' <span style="font:500 12px var(--font);color:#646973">giriş</span></div><div style="height:6px;background:#E2E5E9;margin:6px 0"><div style="height:100%;width:' + (s.g / mxG * 100) + '%;background:' + c.renk + '"></div></div><div style="font-size:12.5px;color:#646973">' + s.n + " teklif · " + eur(s.t) + "</div></div>"; }).join("") + "</div></div>" +
+      CH.map(function (c) {
+        var items = list.map(function (k, i) { return [k, i]; }).filter(function (x) { return x[0].kanal === c.id; });
+        return '<div class="ox-card" style="border-left:5px solid ' + c.renk + '"><h3><span style="display:flex;align-items:center;gap:12px"><span style="display:inline-grid;place-items:center;width:34px;height:34px;background:' + c.renk + ';color:#fff;font:700 15px var(--font);text-transform:none">' + c.ic + '</span><span style="text-transform:none">' + esc(c.ad) + '</span></span><button type="button" class="ox-btn sm" data-add="' + c.id + '">+ ' + esc(c.ad) + " kampanyası</button></h3>" +
+          '<p style="margin:-6px 0 12px;font-size:13px;color:#646973">' + esc(c.amac) + "</p>" +
+          (items.length ? '<table class="ox-tbl"><thead><tr><th>Durum</th><th>Kampanya</th><th class="r">İndirim</th><th class="r">Giriş</th><th class="r">Teklif</th><th class="r">Tutar</th><th></th></tr></thead><tbody>' + items.map(function (x) {
+            var k = x[0], i = x[1], s = stat(k.kod), on = k.aktif !== false;
+            return '<tr data-i="' + i + '"' + (on ? "" : ' style="opacity:.6"') + '><td><label style="display:flex;gap:6px;align-items:center;font-size:13px;cursor:pointer"><input type="checkbox" data-f="aktif"' + (on ? " checked" : "") + "> " + (on ? '<span class="ox-pill" style="--c:#2F855A">Aktif</span>' : '<span class="ox-pill" style="--c:#989DA6">Pasif</span>') + "</label></td>" +
+              '<td><input class="ox-in" data-f="ad" value="' + esc(k.ad) + '" style="width:240px;font-weight:600"><div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:#646973">link kodu: <input class="ox-in" data-f="kod" value="' + esc(k.kod) + '" style="width:150px;padding:4px 7px;font-size:12px"></div></td>' +
+              '<td class="r" style="white-space:nowrap">%<input class="ox-in" data-f="pct" value="' + esc(k.pct) + '" inputmode="decimal" style="width:56px;text-align:right"></td>' +
+              '<td class="r">' + s.g + '</td><td class="r">' + s.n + '</td><td class="r"><b>' + eur(s.t) + "</b></td>" +
+              '<td style="white-space:nowrap;text-align:right"><button type="button" class="ox-btn sm pri" data-kit>Paylaşım kiti →</button> <button type="button" class="ox-btn sm" data-copy>🔗</button> <button type="button" class="ox-btn sm" data-del>Sil</button></td></tr>';
+          }).join("") + "</tbody></table>" : '<div class="ox-empty" style="padding:14px">Bu kanalda kampanya yok. <a href="#" data-add="' + c.id + '" style="color:#D0112B;font-weight:700">Oluşturun →</a></div>') + "</div>";
       }).join("") +
-      '</tbody></table></div><p style="font-size:12.5px;color:#646973;margin:12px 0 0">İndirim, müşterinin iskonto grubuna <b>ek olarak</b> uygulanır. <b>QR kod</b> fuar standı ve broşür için, <b>Sayfa oluştur</b> hazır tanıtım sayfası için, <b>Göm</b> konfigüratörü bir web sitesine yerleştirmek içindir.</p></div>';
+      '<p style="font-size:12.5px;color:#646973">İndirim, müşterinin iskonto grubuna <b>ek olarak</b> uygulanır. Link kodu değişirse eski linkle gelenler o kampanyaya sayılmaz.</p>';
     el.querySelectorAll("tr[data-i]").forEach(function (tr) {
       var k = list[Number(tr.dataset.i)];
       tr.querySelectorAll("[data-f]").forEach(function (inp) { inp.onchange = function () { var f = inp.dataset.f; k[f] = f === "aktif" ? inp.checked : f === "pct" ? Math.max(0, Math.min(90, Number(String(inp.value).replace(",", ".")) || 0)) : f === "kod" ? inp.value.trim().toLowerCase().replace(/[^a-z0-9ğüşıöç-]+/g, "-").replace(/^-+|-+$/g, "") || k.kod : inp.value.trim(); save(); pageCamp(el); }; });
-      tr.querySelector("[data-del]").onclick = function (e) { var b = e.currentTarget; if (!b.dataset.armed) { b.dataset.armed = 1; b.textContent = "Emin misiniz?"; return; } list.splice(Number(tr.dataset.i), 1); save(); pageCamp(el); };
-      tr.querySelectorAll("[data-a]").forEach(function (b) {
-        b.onclick = function () { var a = b.dataset.a; if (a === "copy") copyText(campUrl(k), b); else if (a === "qr") showQr(k.kod, k.ad); else if (a === "page") showPage(k); else if (a === "embed") showEmbed(k); };
-      });
+      tr.querySelector("[data-del]").onclick = function (e) { var b = e.currentTarget; if (!b.dataset.armed) { b.dataset.armed = 1; b.textContent = "Emin misiniz?"; return; } list.splice(Number(tr.dataset.i), 1); save("Kampanya silindi"); pageCamp(el); };
+      tr.querySelector("[data-kit]").onclick = function () { showKit(k); };
+      tr.querySelector("[data-copy]").onclick = function (e) { copyText(campUrl(k), e.currentTarget); };
     });
-    document.getElementById("oxCAdd").onclick = function () { list.push({ kod: "kampanya-" + (list.length + 1), ad: "Yeni kampanya", pct: 0, aktif: true }); save(); pageCamp(el); };
+    el.querySelectorAll("[data-add]").forEach(function (b) { b.onclick = function (e) {
+      e.preventDefault(); var c = CHM[b.dataset.add], n = list.filter(function (k) { return k.kanal === c.id; }).length, kod = c.kod + (n ? "-" + (n + 1) : "");
+      while (list.some(function (k) { return k.kod === kod; })) kod += "-x";
+      list.push({ kod: kod, ad: c.ad + " kampanyası" + (n ? " " + (n + 1) : ""), pct: 0, aktif: true, kanal: c.id }); save("Kampanya eklendi"); pageCamp(el);
+    }; });
   }
 
   /* ---------- ÖRNEK VERİLER ---------- */
@@ -5385,7 +5536,7 @@ var OKTQR = (function () {
     try {
       var X = C().Xt; X.settings = X.settings || {};
       var K = X.settings.kampanyalar || (X.settings.kampanyalar = []);
-      [["mobil-webasto", "Mobil Webasto e-posta kampanyası", 3], ["fuar-2026", "Fuar 2026 stant QR", 5], ["linkedin", "LinkedIn tanıtım gönderisi", 0]].forEach(function (k) { if (!K.some(function (x) { return x.kod === k[0]; })) K.push({ kod: k[0], ad: k[1], pct: k[2], aktif: true }); });
+      [["mobil-webasto", "Mobil Webasto e-posta kampanyası", 3, "eposta"], ["fuar-2026", "Fuar 2026 stant QR", 5, "fuar"], ["linkedin", "LinkedIn tanıtım gönderisi", 0, "linkedin"]].forEach(function (k) { if (!K.some(function (x) { return x.kod === k[0]; })) K.push({ kod: k[0], ad: k[1], pct: k[2], aktif: true, kanal: k[3] }); });
       C().ho();
     } catch (e) {}
     var nl = LS.get("okt-bildirimler", []);
