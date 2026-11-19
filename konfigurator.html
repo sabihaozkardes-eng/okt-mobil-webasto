@@ -5832,7 +5832,7 @@ function init(){if(!$("mApprove")||init.done)return;init.done=true;
   $("mCode").addEventListener("input",function(){this.value=this.value.replace(/\D/g,"").slice(0,6)});
   $("mReq").onclick=function(){request(vals())};
   $("mEdit").onclick=function(){stopListen();show(false);try{localStorage.removeItem(PK)}catch(e){}$("mEmail").focus()};
-  setTimeout(function(){var p=get(PK,null);if(!p||Date.now()>=p.exp||!$("mEmail"))return;var cur=($("mEmail").value||"").trim().toLowerCase();if(cur&&cur!==p.email)return;$("mEmail").value=p.email;if(p.ad)$("mName").value=p.ad;if(p.firma)$("mFirm").value=p.firma;if(p.tel)$("mTel").value=p.tel;$("mKvkk").checked=true;show(true,{t:"Onay bekleniyor… Onaylandığında bu ekran kendiliğinden açılır.",ok:true});listen(p)},400);
+  setTimeout(function(){["mEmail","mName","mFirm","mTel"].forEach(function(i){var e=$(i);if(e)e.value=""});var k=$("mKvkk");if(k)k.checked=false;var p=get(PK,null);if(p&&(Date.now()>=p.exp||!p.topic))try{localStorage.removeItem(PK)}catch(e){}},300);
 }
 })();</script>
 </body></html>
