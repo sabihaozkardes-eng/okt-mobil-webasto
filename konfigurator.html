@@ -444,8 +444,8 @@ body.present .main{grid-template-columns:1fr} body.present .panel,body.present .
       <label for="mName">Ad soyad</label><input id="mName" class="gin" autocomplete="name" required>
       <div class="g2"><div><label for="mFirm">Firma</label><input id="mFirm" class="gin" autocomplete="organization"></div><div><label for="mTel">Telefon</label><input id="mTel" class="gin" type="tel" autocomplete="tel"></div></div>
       <div id="mPwRow" hidden><label for="mPw">Giriş şifresi</label><input id="mPw" class="gin" type="password" autocomplete="current-password"></div>
-      <label class="gchk"><input type="checkbox" id="mKvkk"><span>İletişim bilgilerimin ve yapılandırma seçimlerimin, teklif hazırlanması amacıyla OKT Trailer ile paylaşılmasını kabul ediyorum (KVKK).</span></label>
-      <div class="gerr" id="mErr" role="alert"></div>
+      <label class="gchk"><input type="checkbox" id="mKvkk"><span>Giriş talebimin değerlendirilmesi ve teklif hazırlanması amacıyla; iletişim bilgilerimin, giriş bilgilerimin ve yapılandırma seçimlerimin (teklif formunu göndermesem de) OKT Trailer'a e-posta ile iletilmesini ve bu amaçla işlenmesini kabul ediyorum (KVKK).</span></label><div id="mInfo" style="font-size:12px;line-height:1.45;color:#646973;background:#F6F7F8;border-left:3px solid #D0112B;padding:8px 10px;margin:4px 0 2px">🔒 Girişler OKT satış ekibinin onayına tabidir. Talebiniz bize e-posta ile ulaşır; onaylandığında size e-posta veya WhatsApp ile <b>6 haneli erişim kodu</b> gönderilir.</div>
+      <div class="gerr" id="mErr" role="alert"></div><div id="mApprove" hidden style="margin:10px 0;padding:14px;border:1px solid #c9ccd2;border-radius:6px;background:#f6f7f8"><div style="font-weight:700;font-size:15px;margin-bottom:4px">⏳ Erişim onayı bekleniyor</div><div id="mApTxt" style="font-size:12.5px;line-height:1.5;color:#4f5560;margin-bottom:10px">Talebiniz OKT satış ekibine iletildi. Onaylandığında size e-posta veya WhatsApp ile 6 haneli erişim kodu gönderilecek. Kodu aldığınızda buraya girin; bu sayfayı kapatsanız da daha sonra aynı cihazdan kodla devam edebilirsiniz.</div><div style="display:flex;gap:8px"><input id="mCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="Erişim kodu" style="flex:1;min-width:0;padding:10px 11px;border:1px solid #c9ccd2;border-radius:6px;font:inherit;letter-spacing:3px"><button type="button" id="mCodeGo" class="nbtn primary">Girişi tamamla</button></div><div id="mApErr" style="font-size:12.5px;margin-top:6px;min-height:16px;color:#D0112B"></div><div style="display:flex;justify-content:space-between;font-size:12px;margin-top:2px"><button type="button" id="mReq" style="background:none;border:0;padding:0;color:#D0112B;cursor:pointer;font:inherit">Talebi yeniden gönder</button><button type="button" id="mEdit" style="background:none;border:0;padding:0;color:#646973;cursor:pointer;font:inherit">Bilgileri düzenle</button></div></div>
       <button type="submit" class="nbtn primary" id="mBtn">Giriş yap</button>
       <button type="button" class="gswitch" id="toStaff">Yönetici / satış girişi</button>
       <button type="button" class="nbtn" id="admOpen" style="width:100%;margin-top:10px;background:#fff;color:#202329;border:1px solid #202329">🔒 Yönetici girişi</button><div id="admPw" hidden style="margin-top:10px;padding:12px;border:1px solid #c9ccd2;border-radius:6px;background:#f6f7f8"><div id="admStep1"><label for="admPwIn" style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">1/2 · Yönetici şifresi</label><div style="display:flex;gap:8px"><input id="admPwIn" type="password" autocomplete="current-password" style="flex:1;min-width:0;padding:10px 11px;border:1px solid #c9ccd2;border-radius:6px;font:inherit"><button type="button" id="admPwGo" class="nbtn primary">Devam</button></div></div><div id="admStep2" hidden><div style="font-size:13px;font-weight:600;margin-bottom:4px">2/2 · E-posta onayı</div><div style="font-size:12.5px;color:#4f5560;margin-bottom:8px">Onay kodu <b id="admMail">s•••••••••@gmail.com</b> adresine gönderildi. Mailinizdeki 6 haneli kodu girin.</div><div style="display:flex;gap:8px"><input id="admCodeIn" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" style="flex:1;min-width:0;padding:10px 11px;border:1px solid #c9ccd2;border-radius:6px;font:inherit" ><button type="button" id="admCodeGo" class="nbtn primary">Doğrula</button></div><div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px"><button type="button" id="admResend" class="lnk" style="background:none;border:0;padding:0;color:#D0112B;cursor:pointer;font:inherit">Kodu tekrar gönder</button><button type="button" id="admCancel" style="background:none;border:0;padding:0;color:#646973;cursor:pointer;font:inherit">İptal</button></div></div><div id="admPwErr" style="color:#D0112B;font-size:12.5px;margin-top:6px;min-height:16px"></div></div><p style="margin:14px 0 0;font-size:11px;line-height:1.4;color:#8a8f98;text-align:center">© 2026 OKT Trailer · Tüm hakları saklıdır. İzinsiz kopyalanamaz ve çoğaltılamaz.</p>
@@ -5648,4 +5648,65 @@ window.__oktAskPw=function(){
 };
 })();</script>
 <script id="okt-guard">(function(){function ed(t){return t&&t.closest&&t.closest("input,textarea,[contenteditable]")}document.addEventListener("contextmenu",function(e){if(!ed(e.target))e.preventDefault()});document.addEventListener("keydown",function(e){var k=(e.key||"").toLowerCase();if((e.ctrlKey||e.metaKey)&&(k==="s"||k==="u"||(e.shiftKey&&(k==="i"||k==="j"||k==="c")))){e.preventDefault()}if(k==="f12")e.preventDefault()});document.addEventListener("dragstart",function(e){if(e.target&&e.target.tagName==="IMG")e.preventDefault()});})();</script>
+<script id="okt-onay">(function(){
+var MAIL="sabihaozkardes@gmail.com",PK="okt-onay-bekleyen",AK="okt-onayli",TTL=7*86400000,bypass=false,lastReq=0;
+function $(i){return document.getElementById(i)}
+async function sha(t){var b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}
+function get(k,d){try{var v=JSON.parse(localStorage.getItem(k)||"null");return v==null?d:v}catch(e){return d}}
+function put(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function approved(email){return get(AK,[]).indexOf(email)>=0}
+function vals(){return{email:($("mEmail").value||"").trim().toLowerCase(),ad:($("mName").value||"").trim(),firma:($("mFirm").value||"").trim(),tel:($("mTel").value||"").trim()}}
+function wa(t){var d=String(t||"").replace(/\D/g,"");if(!d)return"";if(d.indexOf("90")===0&&d.length===12)return d;if(d[0]==="0"&&d.length===11)return"9"+d;if(d[0]==="5"&&d.length===10)return"90"+d;return d}
+function device(){var u=navigator.userAgent;var os=/Windows/.test(u)?"Windows":/Mac OS/.test(u)?"macOS":/Android/.test(u)?"Android":/iPhone|iPad/.test(u)?"iOS":"Diğer";var br=/Edg\//.test(u)?"Edge":/Chrome\//.test(u)?"Chrome":/Safari\//.test(u)?"Safari":/Firefox\//.test(u)?"Firefox":"Tarayıcı";return br+" · "+os}
+function show(on,msg){$("mApprove").hidden=!on;$("mBtn").hidden=on;var i=$("mInfo");if(i)i.hidden=on;["mEmail","mName","mFirm","mTel"].forEach(function(id){var e=$(id);if(e)e.readOnly=on});if(on){$("mApErr").style.color=msg&&msg.ok?"#2F855A":"#D0112B";$("mApErr").textContent=msg?msg.t:"";setTimeout(function(){$("mCode").focus()},50)}}
+async function request(v){
+  var now=Date.now();if(now-lastReq<60000){show(true,{t:"Yeni talep için "+Math.ceil((60000-(now-lastReq))/1000)+" sn bekleyin."});return}
+  lastReq=now;var a=new Uint32Array(2);crypto.getRandomValues(a);var code=String(a[0]%1000000).padStart(6,"0"),salt=String(a[1]);
+  put(PK,{email:v.email,ad:v.ad,firma:v.firma,tel:v.tel,salt:salt,hash:await sha(salt+"|"+code),exp:now+TTL,t:now});
+  show(true,{t:"Talep gönderiliyor…",ok:true});
+  var q=new URLSearchParams(location.search),urun=q.get("urun")||"",kamp=q.get("kampanya")||"",w=wa(v.tel);
+  var reply="Merhaba "+(v.ad.split(" ")[0]||"")+",\n\nOKT Trailer ürün konfigüratörü erişim kodunuz: "+code+"\n\nKodu giriş ekranındaki \"Erişim kodu\" alanına yazarak devam edebilirsiniz. Kod 7 gün geçerlidir.\n\nİyi çalışmalar,\nOKT Trailer Satış Ekibi";
+  var f={_subject:"OKT konfigüratör · ERİŞİM ONAYI · "+v.ad+(v.firma?" ("+v.firma+")":"")+" · kod "+code,_template:"table",_captcha:"false",_replyto:v.email,
+    "Onay kodu":code,"Ad soyad":v.ad,"E-posta":v.email,"Firma":v.firma||"—","Telefon":v.tel||"—","Kampanya":kamp||"—","Açılan ürün":urun||"—","Talep zamanı":new Date().toLocaleString("tr-TR"),"Cihaz":device(),
+    "Nasıl onaylarım?":"Bu maili YANITLA'ya basın (yanıt doğrudan müşteriye gider) ve aşağıdaki hazır yanıtı gönderin. Onaylamıyorsanız hiçbir şey yapmayın; müşteri giriş yapamaz.",
+    "Hazır yanıt (kopyalayıp gönderin)":reply};
+  if(w)f["WhatsApp ile gönder"]="https://wa.me/"+w+"?text="+encodeURIComponent(reply);
+  f.Mesaj="ERİŞİM ONAYI TALEBİ\n\n"+v.ad+(v.firma?" · "+v.firma:"")+"\n"+v.email+(v.tel?" · "+v.tel:"")+"\n\nOnay kodu: "+code+"\n\nOnaylamak için Yanıtla'ya basıp hazır yanıtı gönderin.";
+  try{var r=await fetch("https://formsubmit.co/ajax/"+encodeURIComponent(MAIL),{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(f)});var j=await r.json().catch(function(){return{}});if(!r.ok||String(j.success)==="false")throw new Error(j.message||"HTTP "+r.status);
+    show(true,{t:"Talebiniz iletildi. Erişim kodu size e-posta veya WhatsApp ile gelecek.",ok:true})}
+  catch(e){console.warn(e);lastReq=0;show(true,{t:"Talep gönderilemedi. İnternet bağlantınızı kontrol edip \"Talebi yeniden gönder\"e basın."})}
+}
+async function verify(){
+  var v=vals(),p=get(PK,null),c=($("mCode").value||"").replace(/\D/g,"");
+  if(!p||p.email!==v.email){show(true,{t:"Bu e-posta için bekleyen talep yok. \"Talebi yeniden gönder\"e basın."});return}
+  if(Date.now()>p.exp){show(true,{t:"Kodun süresi doldu. Yeni talep gönderin."});return}
+  if(c.length!==6){show(true,{t:"6 haneli erişim kodunu girin."});return}
+  p.tries=(p.tries||0)+1;put(PK,p);if(p.tries>8){show(true,{t:"Çok fazla hatalı deneme. Yeni talep gönderin."});localStorage.removeItem(PK);return}
+  if(await sha(p.salt+"|"+c)!==p.hash){$("mCode").value="";show(true,{t:"Kod hatalı. Lütfen size gönderilen kodu kontrol edin."});return}
+  var L=get(AK,[]);if(L.indexOf(v.email)<0)L.push(v.email);put(AK,L);try{localStorage.removeItem(PK)}catch(e){}
+  show(false);bypass=true;var f=$("mForm");if(f.requestSubmit)f.requestSubmit();else $("mBtn").click();
+}
+document.addEventListener("submit",function(e){
+  if(!e.target||e.target.id!=="mForm")return;
+  if(bypass){bypass=false;return}
+  if(approved(vals().email)&&$("mApprove").hidden)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  if(!$("mApprove").hidden){verify();return}
+  var v=vals(),err=function(t){$("mErr").textContent=t};
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email))return err("Geçerli bir e-posta adresi yazın.");
+  if(v.ad.length<3)return err("Adınızı ve soyadınızı yazın.");
+  if(!$("mKvkk").checked)return err("Devam etmek için bilgilendirme onayını işaretleyin.");
+  err("");
+  var p=get(PK,null);if(p&&p.email===v.email&&Date.now()<p.exp){show(true);return}
+  request(v);
+},true);
+document.addEventListener("DOMContentLoaded",init);if(document.readyState!=="loading")init();
+function init(){if(!$("mApprove")||init.done)return;init.done=true;
+  $("mCodeGo").onclick=verify;
+  $("mCode").addEventListener("input",function(){this.value=this.value.replace(/\D/g,"").slice(0,6)});
+  $("mReq").onclick=function(){request(vals())};
+  $("mEdit").onclick=function(){show(false);try{localStorage.removeItem(PK)}catch(e){}$("mEmail").focus()};
+  setTimeout(function(){var p=get(PK,null);if(!p||Date.now()>=p.exp||!$("mEmail"))return;var cur=($("mEmail").value||"").trim().toLowerCase();if(cur&&cur!==p.email)return;$("mEmail").value=p.email;if(p.ad)$("mName").value=p.ad;if(p.firma)$("mFirm").value=p.firma;if(p.tel)$("mTel").value=p.tel;$("mKvkk").checked=true;show(true,{t:"Erişim kodunuzu bekliyoruz. Kodu aldıysanız girin.",ok:true})},400);
+}
+})();</script>
 </body></html>
