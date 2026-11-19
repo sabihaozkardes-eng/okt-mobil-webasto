@@ -5296,7 +5296,7 @@ var OKTQR = (function () {
     if (a) a.onclick = function () { seedDemo(); toast("Örnek veriler yüklendi"); C().XB("dash"); };
     if (c) c.onclick = function () { if (!c.dataset.armed) { c.dataset.armed = 1; c.textContent = "Emin misiniz?"; return; } clearDemo(); toast("Örnek veriler kaldırıldı"); C().XB("dash"); };
   }
-  function autoSeed() { if (!demoLoaded() && !LS.get(K_DEMO_OFF, false) && !acts().some(function (a) { return !a.ornek; })) seedDemo(); }
+  function autoSeed() { if (!demoLoaded() && !LS.get(K_DEMO_OFF, false)) seedDemo(); }
 
   var PAGES = { dash: pageDash, offers: pageOffers, aband: pageAband, people: pagePeople, report: pageReport, camp: pageCamp, bulk: pageBulk, line: pageLine, fleet: pageFleet, webasto: pageWebasto };
   function wrapOrig(tab) {
