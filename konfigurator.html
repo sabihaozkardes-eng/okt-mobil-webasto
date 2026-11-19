@@ -1,6 +1,37 @@
 <!doctype html>
 <html lang="tr">
-<head><script>window.__oktEv=function(type,o,x){try{o=o||{};var k="okt-aktivite",L=JSON.parse(localStorage.getItem(k)||"[]");var e={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),type:type,t:Date.now(),ad:o.yetkili||o.ad||"",email:String(o.eposta||o.email||"").trim().toLowerCase(),firma:o.firma||"",tel:o.tel||"",sehir:o.sehir||"",kampanya:o.kampanya||"",urun:o.urunAdi||o.urun||"",urunKodu:o.urunKodu||"",toplam:Number(o.toplam)||0,liste:Number(o.liste)||0,pct:Number(o.pct)||0,teklifNo:o.teklifNo||"",musteriNo:o.musteriNo||"",kaynak:o.kaynak||"",notlar:o.notlar||"",lines:(o.lines||[]).slice(0,120).map(function(l){return{c:l.code,t:l.title,l:l.label,p:Number(l.total)||0}})};if(x)for(var q in x)e[q]=x[q];if(type==="secim"&&L[0]&&L[0].type==="secim"&&L[0].email===e.email&&L[0].urunKodu===e.urunKodu&&e.t-L[0].t<6e5){L[0]=e}else L.unshift(e);localStorage.setItem(k,JSON.stringify(L.slice(0,600)));try{window.dispatchEvent(new CustomEvent("okt-ev"))}catch(_){}}catch(err){}};</script><script>window.__oktLog=function(o){try{var k="okt-bildirimler",L=JSON.parse(localStorage.getItem(k)||"[]");if(L.some(function(x){return x.s===o.s&&x.m===o.m}))return;o.t=Date.now();L.unshift(o);localStorage.setItem(k,JSON.stringify(L.slice(0,150)))}catch(e){}};</script>
+<head><script id="okt-relay">(function(){
+var RELAY="https://sabihaozkardes-eng.github.io/okt-mobil-webasto/konfigurator.html?relay=1";
+var FS=/^https:\/\/formsubmit\.co\/ajax\//;
+var isWeb=/^https?:$/.test(location.protocol);
+if(isWeb&&/[?&]relay=1(&|$)/.test(location.search)){
+  window.__oktRelay=true;
+  addEventListener("message",function(e){var d=e.data;if(!d||d.t!=="okt-send")return;
+    (async function(){var res;try{if(!FS.test(d.url))throw new Error("izin yok");var r=await fetch(d.url,{method:"POST",headers:d.headers||{},body:d.body});res={status:r.status,text:await r.text()}}catch(err){res={status:0,text:JSON.stringify({success:"false",message:String(err&&err.message||err)})}}
+    res.t="okt-res";res.id=d.id;try{e.source.postMessage(res,"*")}catch(_){}})();});
+  var p=window.parent!==window?window.parent:window.opener;try{p&&p.postMessage({t:"okt-relay-ready"},"*")}catch(_){}
+  try{window.stop()}catch(_){}
+  return;
+}
+if(isWeb)return;
+var ready=null,pend={},seq=0,win=null;
+addEventListener("message",function(e){var d=e.data;if(!d)return;if(d.t==="okt-res"&&pend[d.id]){pend[d.id](d);delete pend[d.id]}});
+function relay(){if(ready)return ready;ready=new Promise(function(res,rej){var fr=document.createElement("iframe");fr.style.cssText="position:absolute;width:1px;height:1px;left:-9999px;border:0";fr.setAttribute("aria-hidden","true");fr.src=RELAY;
+  var to=setTimeout(function(){rej(new TypeError("bildirim köprüsü açılamadı"))},25000);
+  addEventListener("message",function h(e){if(e.data&&e.data.t==="okt-relay-ready"&&e.source===fr.contentWindow){clearTimeout(to);removeEventListener("message",h);win=fr.contentWindow;res(win)}});
+  (document.body||document.documentElement).appendChild(fr)});
+  ready.catch(function(){ready=null});return ready}
+window.__oktRelayWarm=function(){relay().catch(function(){})};
+var of=window.fetch.bind(window);
+window.fetch=function(input,init){var url=typeof input==="string"?input:(input&&input.url)||"";if(!FS.test(url))return of(input,init);
+  init=init||{};var h={};if(init.headers){if(typeof init.headers.forEach==="function"&&!Array.isArray(init.headers))init.headers.forEach(function(v,k){h[k]=v});else Object.assign(h,init.headers)}
+  var b=init.body;if(typeof URLSearchParams!=="undefined"&&b instanceof URLSearchParams){h["Content-Type"]="application/x-www-form-urlencoded;charset=UTF-8";b=b.toString()}else if(b!=null&&typeof b!=="string")b=String(b);
+  return relay().then(function(w){return new Promise(function(res,rej){var id="r"+(++seq)+Date.now();var to=setTimeout(function(){delete pend[id];rej(new TypeError("bildirim köprüsü yanıt vermedi"))},25000);
+    pend[id]=function(d){clearTimeout(to);res(new Response(d.text,{status:d.status||502,headers:{"Content-Type":"application/json"}}))};
+    w.postMessage({t:"okt-send",id:id,url:url,headers:h,body:b},"*")})})};
+document.addEventListener("DOMContentLoaded",function(){setTimeout(window.__oktRelayWarm,1500)});
+})();
+</script><script>window.__oktEv=function(type,o,x){try{o=o||{};var k="okt-aktivite",L=JSON.parse(localStorage.getItem(k)||"[]");var e={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),type:type,t:Date.now(),ad:o.yetkili||o.ad||"",email:String(o.eposta||o.email||"").trim().toLowerCase(),firma:o.firma||"",tel:o.tel||"",sehir:o.sehir||"",kampanya:o.kampanya||"",urun:o.urunAdi||o.urun||"",urunKodu:o.urunKodu||"",toplam:Number(o.toplam)||0,liste:Number(o.liste)||0,pct:Number(o.pct)||0,teklifNo:o.teklifNo||"",musteriNo:o.musteriNo||"",kaynak:o.kaynak||"",notlar:o.notlar||"",lines:(o.lines||[]).slice(0,120).map(function(l){return{c:l.code,t:l.title,l:l.label,p:Number(l.total)||0}})};if(x)for(var q in x)e[q]=x[q];if(type==="secim"&&L[0]&&L[0].type==="secim"&&L[0].email===e.email&&L[0].urunKodu===e.urunKodu&&e.t-L[0].t<6e5){L[0]=e}else L.unshift(e);localStorage.setItem(k,JSON.stringify(L.slice(0,600)));try{window.dispatchEvent(new CustomEvent("okt-ev"))}catch(_){}}catch(err){}};</script><script>window.__oktLog=function(o){try{var k="okt-bildirimler",L=JSON.parse(localStorage.getItem(k)||"[]");if(L.some(function(x){return x.s===o.s&&x.m===o.m}))return;o.t=Date.now();L.unshift(o);localStorage.setItem(k,JSON.stringify(L.slice(0,150)))}catch(e){}};</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>OKT Ürün Konfigüratörü</title>
