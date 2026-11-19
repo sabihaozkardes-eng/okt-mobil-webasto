@@ -4426,25 +4426,115 @@ ${M3(a.b64)}`}),new Blob([i+`--${t}--\r
 
 </script>
 <script>(function(){function go(){if(location.hash==="#yonetici"){var b=document.getElementById("admOpen");if(b)b.click();}}window.addEventListener("load",go);window.addEventListener("hashchange",go);})();</script>
-<script id="okt-admin-x">/* OKT Yönetim Paneli — Trendyol tarzı genişletme */
+<script id="okt-admin-x">/* Minimal QR kodlayıcı: bayt modu, hata düzeltme M, sürüm 1-10. Çıktı: SVG metni */
+var OKTQR = (function () {
+  var TAB = { 1: [10, [[1, 16]]], 2: [16, [[1, 28]]], 3: [26, [[1, 44]]], 4: [18, [[2, 32]]], 5: [24, [[2, 43]]], 6: [16, [[4, 27]]], 7: [18, [[4, 31]]], 8: [22, [[2, 38], [2, 39]]], 9: [22, [[3, 36], [2, 37]]], 10: [26, [[4, 43], [1, 44]]] };
+  var ALIGN = { 1: [], 2: [6, 18], 3: [6, 22], 4: [6, 26], 5: [6, 30], 6: [6, 34], 7: [6, 22, 38], 8: [6, 24, 42], 9: [6, 26, 46], 10: [6, 28, 50] };
+  var EXP = new Array(512), LOG = new Array(256), x = 1, i;
+  for (i = 0; i < 255; i++) { EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 256) x ^= 0x11d; }
+  for (i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+  function gmul(a, b) { return a === 0 || b === 0 ? 0 : EXP[LOG[a] + LOG[b]]; }
+  function rs(data, n) {
+    var g = [1], k, j;
+    for (k = 0; k < n; k++) { var ng = new Array(g.length + 1).fill(0); for (j = 0; j < g.length; j++) { ng[j] ^= g[j]; ng[j + 1] ^= gmul(g[j], EXP[k]); } g = ng; }
+    var r = data.concat(new Array(n).fill(0));
+    for (k = 0; k < data.length; k++) { var c = r[k]; if (c) for (j = 1; j < g.length; j++) r[k + j] ^= gmul(g[j], c); }
+    return r.slice(data.length);
+  }
+  function utf8(s) { return Array.from(new TextEncoder().encode(s)); }
+  function encode(text) {
+    var b = utf8(text), v, ec, groups, cap, cc;
+    for (v = 1; v <= 10; v++) { ec = TAB[v][0]; groups = TAB[v][1]; cap = groups.reduce(function (s, g) { return s + g[0] * g[1]; }, 0); cc = v < 10 ? 8 : 16; if (4 + cc + 8 * b.length <= cap * 8) break; }
+    if (v > 10) throw new Error("Metin QR için çok uzun");
+    var bits = "0100" + b.length.toString(2).padStart(cc, "0") + b.map(function (c) { return c.toString(2).padStart(8, "0"); }).join("");
+    bits += "0".repeat(Math.min(4, cap * 8 - bits.length)); bits += "0".repeat((8 - bits.length % 8) % 8);
+    var cw = []; for (i = 0; i < bits.length; i += 8) cw.push(parseInt(bits.substr(i, 8), 2));
+    var pad = [0xEC, 0x11]; i = 0; while (cw.length < cap) { cw.push(pad[i % 2]); i++; }
+    var blocks = [], p = 0;
+    groups.forEach(function (g) { for (var q = 0; q < g[0]; q++) { blocks.push(cw.slice(p, p + g[1])); p += g[1]; } });
+    var ecb = blocks.map(function (bl) { return rs(bl, ec); }), out = [], mx = Math.max.apply(null, blocks.map(function (bl) { return bl.length; }));
+    for (i = 0; i < mx; i++) blocks.forEach(function (bl) { if (i < bl.length) out.push(bl[i]); });
+    for (i = 0; i < ec; i++) ecb.forEach(function (e) { out.push(e[i]); });
+    return { v: v, cw: out };
+  }
+  function build(text) {
+    var e = encode(text), v = e.v, N = 17 + 4 * v, r, c, M = [];
+    for (r = 0; r < N; r++) M.push(new Array(N).fill(null));
+    function finder(r0, c0) { for (var a = -1; a < 8; a++) for (var b = -1; b < 8; b++) { var rr = r0 + a, cc = c0 + b; if (rr < 0 || cc < 0 || rr >= N || cc >= N) continue; M[rr][cc] = a >= 0 && a <= 6 && b >= 0 && b <= 6 && (a === 0 || a === 6 || b === 0 || b === 6 || (a >= 2 && a <= 4 && b >= 2 && b <= 4)); } }
+    finder(0, 0); finder(0, N - 7); finder(N - 7, 0);
+    for (i = 8; i < N - 8; i++) { M[6][i] = M[i][6] = i % 2 === 0; }
+    var A = ALIGN[v];
+    A.forEach(function (ar) { A.forEach(function (ac) { if (M[ar][ac] !== null) return; for (var a = -2; a <= 2; a++) for (var b = -2; b <= 2; b++) M[ar + a][ac + b] = Math.max(Math.abs(a), Math.abs(b)) !== 1; }); });
+    M[N - 8][8] = true;
+    var res = M.map(function (row) { return row.map(function (q) { return q !== null; }); });
+    for (i = 0; i < 9; i++) { res[8][i] = res[i][8] = true; }
+    for (i = 0; i < 8; i++) { res[8][N - 1 - i] = res[N - 1 - i][8] = true; }
+    if (v >= 7) for (i = 0; i < 6; i++) for (var j = 0; j < 3; j++) { res[i][N - 11 + j] = res[N - 11 + j][i] = true; }
+    var bits = e.cw.map(function (q) { return q.toString(2).padStart(8, "0"); }).join(""), pos = [], col = N - 1, up = true;
+    while (col > 0) { if (col === 6) col--; for (var k = 0; k < N; k++) { r = up ? N - 1 - k : k; for (var d = 0; d < 2; d++) { c = col - d; if (!res[r][c]) pos.push([r, c]); } } up = !up; col -= 2; }
+    var masks = [function (r, c) { return (r + c) % 2 === 0; }, function (r) { return r % 2 === 0; }, function (r, c) { return c % 3 === 0; }, function (r, c) { return (r + c) % 3 === 0; }, function (r, c) { return (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0; }, function (r, c) { return (r * c) % 2 + (r * c) % 3 === 0; }, function (r, c) { return ((r * c) % 2 + (r * c) % 3) % 2 === 0; }, function (r, c) { return ((r + c) % 2 + (r * c) % 3) % 2 === 0; }];
+    var best = null;
+    for (var mk = 0; mk < 8; mk++) {
+      var G = M.map(function (row) { return row.slice(); });
+      pos.forEach(function (pc, idx) { var bit = idx < bits.length ? bits[idx] === "1" : false; G[pc[0]][pc[1]] = bit !== masks[mk](pc[0], pc[1]); });
+      var d5 = (0 << 3) | mk, f = d5 << 10;
+      for (i = 14; i >= 10; i--) if ((f >> i) & 1) f ^= 0x537 << (i - 10);
+      var fmt = ((d5 << 10) | f) ^ 0x5412, fb = [];
+      for (i = 0; i < 15; i++) fb.push(((fmt >> i) & 1) === 1);
+      for (i = 0; i < 6; i++) G[i][8] = fb[i];
+      G[7][8] = fb[6]; G[8][8] = fb[7]; G[8][7] = fb[8];
+      for (i = 9; i < 15; i++) G[8][14 - i] = fb[i];
+      for (i = 0; i < 8; i++) G[8][N - 1 - i] = fb[i];
+      for (i = 8; i < 15; i++) G[N - 15 + i][8] = fb[i];
+      G[N - 8][8] = true;
+      var pen = 0, lines = G.concat(G[0].map(function (_, ci) { return G.map(function (row) { return row[ci]; }); }));
+      lines.forEach(function (L) { var run = 1; for (var t = 1; t < N; t++) { if (L[t] === L[t - 1]) run++; else { if (run >= 5) pen += run - 2; run = 1; } } if (run >= 5) pen += run - 2; });
+      var dark = 0; G.forEach(function (row) { row.forEach(function (q) { if (q) dark++; }); });
+      pen += Math.abs(Math.floor(dark * 20 / (N * N)) - 10) * 10;
+      if (!best || pen < best[0]) best = [pen, G];
+    }
+    return best[1];
+  }
+  function svg(text, opt) {
+    opt = opt || {}; var G = build(text), N = G.length, q = opt.quiet == null ? 4 : opt.quiet, S = N + 2 * q, d = "";
+    for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) if (G[r][c]) d += "M" + (c + q) + " " + (r + q) + "h1v1h-1z";
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + S + " " + S + '" shape-rendering="crispEdges"' + (opt.size ? ' width="' + opt.size + '" height="' + opt.size + '"' : "") + '><rect width="100%" height="100%" fill="#fff"/><path d="' + d + '" fill="' + (opt.color || "#1B1C20") + '"/></svg>';
+  }
+  return { build: build, svg: svg };
+})();
+
+/* OKT Yönetim Paneli — OKT kimliğiyle */
 (function () {
   "use strict";
   var LS = {
     get: function (k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } },
     set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
-  var K_ACT = "okt-aktivite", K_OFF = "okt-teklif-durum", K_CRM = "okt-musteri-crm", K_AB = "okt-yarim-durum", K_SEEN = "okt-zil-gorulen";
-  var STATUSES = [
-    ["Yeni", "#1d5fd1"], ["Görüşülüyor", "#c26a00"], ["Teklif verildi", "#6b3fd1"], ["Kazanıldı", "#0f7a3d"], ["Kaybedildi", "#9aa0a8"]
+  var K_ACT = "okt-aktivite", K_OFF = "okt-teklif-durum", K_CRM = "okt-musteri-crm", K_AB = "okt-yarim-durum", K_SEEN = "okt-zil-gorulen",
+      K_PROD = "okt-uretim", K_PCFG = "okt-uretim-ayar", K_WB = "okt-webasto-firsat";
+  var STATUSES = [["Yeni", "#2B6CB0"], ["Görüşülüyor", "#B7791F"], ["Teklif verildi", "#6B46C1"], ["Kazanıldı", "#2F855A"], ["Kaybedildi", "#989DA6"]];
+  var STAGES = [
+    ["Proje & onay", "Teknik çizim, müşteri onayı, malzeme siparişi"],
+    ["Sac kesim & bükme", "Lazer kesim, silindir/eliptik bükme"],
+    ["Kaynak & gövde", "Gövde, dalga kıranlar, şase kaynağı"],
+    ["Test", "Basınç / sızdırmazlık testi"],
+    ["Kumlama & boya", "Yüzey hazırlık, astar, son kat"],
+    ["Montaj & ekipman", "Vana, pompa, aks, elektrik, Mobil Webasto"],
+    ["Muayene & belge", "ADR / TSE, tip onayı, ruhsat dosyası"],
+    ["Teslim edildi", "Müşteriye teslim"]
   ];
-  var TAGS = ["Sıcak", "Takipte", "Fuar", "Gıda", "Bitüm", "VIP", "Bayi", "Soğuk"];
-  var SITE = "https://sabihaozkardes-eng.github.io/okt-mobil-webasto/konfigurator.html";
-  var st = { period: "30", offFilter: "Tümü", offQ: "", peopleQ: "", person: null, abShowDone: false, bulkPid: "*", bulkPct: "", bulkRound: "10", campEdit: null };
+  var TAGS = ["Sıcak", "Takipte", "Fuar", "Filo", "Bayi", "Kamu", "VIP", "Soğuk"];
+  var SITE = "https://sabihaozkardes-eng.github.io/okt-mobil-webasto/";
+  var KONF = SITE + "konfigurator.html";
+  var st = { period: "30", offFilter: "Tümü", offQ: "", peopleQ: "", person: null, abShowDone: false, bulkPid: "*", bulkPct: "", bulkRound: "10", wbShowDone: false };
 
   function C() { return window.__oktCore; }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function eur(n) { try { return C().Fn(Number(n) || 0); } catch (e) { return "€" + Math.round(n || 0).toLocaleString("tr-TR"); } }
   function dt(t) { return new Date(t).toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }); }
+  function dday(t) { return new Date(t).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" }); }
+  function iso(t) { var d = new Date(t); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+  function addMonths(t, m) { var d = new Date(t); d.setMonth(d.getMonth() + m); return d.getTime(); }
   function ago(t) {
     var s = Math.round((Date.now() - t) / 1000);
     if (s < 60) return "az önce"; if (s < 3600) return Math.floor(s / 60) + " dk önce";
@@ -4468,6 +4558,34 @@ ${M3(a.b64)}`}),new Blob([i+`--${t}--\r
   }
   function telLink(t) { var d = String(t || "").replace(/[^\d+]/g, ""); return d ? "tel:" + d : ""; }
 
+  /* ---------- OKT iş mantığı ---------- */
+  function sector(urun) {
+    var u = String(urun || "");
+    if (/LPG/i.test(u)) return "LPG & gaz";
+    if (/Bit[üu]m|Asfalt/i.test(u)) return "Bitüm & asfalt";
+    if (/G[ıi]da|S[üu]t/i.test(u)) return "Gıda & içecek";
+    if (/Kimyasal|[İI]zolasyonlu|Vakum/i.test(u)) return "Kimya";
+    if (/Silindirik|Eliptik|Konik|Deveboynu|Rollover/i.test(u)) return "Akaryakıt";
+    if (/Su Tank/i.test(u)) return "Su & kamu";
+    if (/Silobas|Yem/i.test(u)) return "Silobas & yem";
+    if (/Damper/i.test(u)) return "Damper";
+    return u ? "Diğer" : "—";
+  }
+  var SECTOR_COLOR = { "LPG & gaz": "#D0112B", "Akaryakıt": "#B7791F", "Kimya": "#6B46C1", "Gıda & içecek": "#2F855A", "Bitüm & asfalt": "#1B1C20", "Su & kamu": "#2B6CB0", "Silobas & yem": "#8A6D3B", "Damper": "#646973", "Diğer": "#989DA6" };
+  function lineVal(a, re) { var l = (a.lines || []).filter(function (x) { return re.test(x.t || ""); })[0]; return l ? String(l.l || "") : ""; }
+  function hasHeating(a) { return (a.lines || []).some(function (l) { return /webasto|ısıt|isit|ısıtma|heating/i.test((l.t || "") + " " + (l.l || "")); }); }
+  function webastoReasons(a) {
+    var r = [], sec = sector(a.urun), climate = lineVal(a, /iklim/i), route = lineVal(a, /güzerg/i), load = lineVal(a, /taşıyacak|depolanacak/i);
+    if (sec === "Bitüm & asfalt") r.push("Bitüm sıcak taşınmalı");
+    if (sec === "Gıda & içecek") r.push("Gıda: donma / viskozite riski");
+    if (/İzolasyonlu/i.test(a.urun)) r.push("İzolasyonlu tank: sıcaklık korunmalı");
+    if (/so[ğg]uk/i.test(climate)) r.push("Soğuk iklim (" + climate + ")");
+    if (/Uluslararas/i.test(route)) r.push("Uluslararası güzergâh");
+    if (/fuel|motorin|dizel|yağ|melas|çikolata|bal|asfalt|zift/i.test(load)) r.push("Yük: " + load);
+    return r;
+  }
+  function pcfg() { var c = LS.get(K_PCFG, {}); return { kapasite: Number(c.kapasite) || 3, sure: Number(c.sure) || 6, garanti: Number(c.garanti) || 24, bakim: Number(c.bakim) || 12, muayene: Number(c.muayene) || 30 }; }
+
   /* ---------- veri türetme ---------- */
   function offers() {
     var seen = {}, out = [], meta = LS.get(K_OFF, {});
@@ -4475,9 +4593,22 @@ ${M3(a.b64)}`}),new Blob([i+`--${t}--\r
       if (a.type !== "teklif" || !a.teklifNo || seen[a.teklifNo]) return;
       seen[a.teklifNo] = 1;
       var m = meta[a.teklifNo] || {};
-      out.push(Object.assign({}, a, { durum: m.durum || "Yeni", temsilci: m.temsilci || "", takip: m.takip || "", not: m.not || "" }));
+      out.push(Object.assign({}, a, { durum: m.durum || "Yeni", temsilci: m.temsilci || "", takip: m.takip || "", not: m.not || "", sector: sector(a.urun) }));
     });
     return out;
+  }
+  function production() {
+    var P = LS.get(K_PROD, {}), changed = false, cfg = pcfg();
+    offers().forEach(function (o) {
+      if (o.durum === "Kazanıldı" && !P[o.teklifNo]) { P[o.teklifNo] = { stage: 0, start: Date.now(), stageT: Date.now(), sase: "", teslim: iso(Date.now() + cfg.sure * 7 * 86400000) }; changed = true; }
+    });
+    if (changed) LS.set(K_PROD, P);
+    var byNo = {}; offers().forEach(function (o) { byNo[o.teklifNo] = o; });
+    return Object.keys(P).filter(function (k) { return byNo[k]; }).map(function (k) { return Object.assign({}, byNo[k], { p: P[k] }); });
+  }
+  function leadWeeks() {
+    var cfg = pcfg(), inLine = production().filter(function (x) { return x.p.stage < STAGES.length - 1; }).length;
+    return cfg.sure + Math.floor(inLine / Math.max(1, cfg.kapasite));
   }
   function abandoned() {
     var L = acts(), lastOffer = {}, out = [], seen = {}, meta = LS.get(K_AB, {});
@@ -4489,6 +4620,18 @@ ${M3(a.b64)}`}),new Blob([i+`--${t}--\r
       if ((lastOffer[k] || 0) > a.t) return;
       var m = meta[a.id] || {};
       out.push(Object.assign({}, a, { arandi: !!m.arandi, arandiT: m.t || 0 }));
+    });
+    return out;
+  }
+  function webastoOpps() {
+    var seen = {}, out = [], meta = LS.get(K_WB, {});
+    acts().forEach(function (a) {
+      if (!(a.type === "teklif" || a.type === "secim" || a.type === "ayril")) return;
+      var k = pkey(a); if (seen[k]) return;
+      if (hasHeating(a)) { seen[k] = 1; return; }
+      var r = webastoReasons(a); if (!r.length) return;
+      seen[k] = 1; var m = meta[k] || {};
+      out.push(Object.assign({}, a, { reasons: r, onerildi: !!m.onerildi, key: k }));
     });
     return out;
   }
@@ -4518,196 +4661,349 @@ ${M3(a.b64)}`}),new Blob([i+`--${t}--\r
     return acts().filter(function (a) { return a.t > seen && (a.type === "giris" || a.type === "teklif" || a.type === "ayril"); }).length;
   }
 
-  /* ---------- stil ---------- */
+  /* ---------- OKT stili ---------- */
+  var css2 = `.ok-body .ox-h1.sub{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;font-size:13.5px;color:#646973}
+  .ok-body .ox-h1.sub small{font-size:13.5px}
+  .ok-body .ox-h1.keep{display:flex;align-items:center;gap:14px;margin:0 0 18px;font:700 30px var(--cond,"Barlow Condensed",sans-serif);text-transform:uppercase;color:#1B1C20}
+  .ok-body .ox-h1.keep small{font:500 14px var(--font,Barlow,sans-serif);text-transform:none;color:#646973}`;
+
   var css = `
-  #admin.oktx{padding:0;background:#eef0f4}
-  #admin.oktx .ap{max-width:none!important;width:100%!important;height:100%!important;max-height:none!important;border-radius:0!important;margin:0!important;display:flex;flex-direction:column;background:#eef0f4;box-shadow:none}
-  #admin.oktx .ah{background:#222b3a;color:#fff;padding:0 18px!important;min-height:64px;display:flex;align-items:center;gap:16px;border:0;position:relative;z-index:3}
-  #admin.oktx .ah>b{color:#fff;font:700 18px/1 Barlow,system-ui,sans-serif;letter-spacing:.2px;white-space:nowrap;display:flex;align-items:center;gap:10px}
-  #admin.oktx .ah>b:before{content:"";width:6px;height:26px;background:#d31334;border-radius:2px;display:inline-block}
-  #admin.oktx #aClose{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35)}
-  #admin.oktx #aClose:hover{background:rgba(255,255,255,.1)}
-  #admin.oktx .ab{flex:1;overflow:auto;padding:24px 28px 40px!important;background:#eef0f4}
-  .ox-nav{display:flex;align-items:stretch;gap:2px;flex:1;height:64px}
-  .ox-it{position:relative;display:flex;align-items:center}
-  .ox-it>button{background:none;border:0;color:#cfd5df;font:600 13px/1.2 Barlow,system-ui,sans-serif;letter-spacing:.3px;text-transform:uppercase;padding:0 14px;height:100%;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
-  .ox-it>button:hover,.ox-it.open>button{color:#fff;background:rgba(255,255,255,.06)}
-  .ox-it.on>button{color:#fff;box-shadow:inset 0 -3px 0 #f27a1a}
-  .ox-it .car{font-size:9px;opacity:.7}
-  .ox-dd{position:absolute;top:100%;left:0;min-width:250px;background:#fff;border-radius:0 0 10px 10px;box-shadow:0 14px 34px rgba(16,24,40,.18);padding:6px 0;display:none}
-  .ox-it.open .ox-dd{display:block}
-  .ox-dd button{display:block;width:100%;text-align:left;background:none;border:0;padding:14px 22px;font:600 13px Barlow,system-ui,sans-serif;letter-spacing:.3px;text-transform:uppercase;color:#273142;cursor:pointer}
-  .ox-dd button:hover{background:#f4f5f8}
-  .ox-dd button.on{background:#f27a1a;color:#fff}
-  .ox-new{background:#e5203a;color:#fff;font-size:9px;font-weight:800;border-radius:4px;padding:2px 5px;margin-left:8px;vertical-align:2px}
-  .ox-bell{position:relative;background:none;border:0;color:#fff;width:42px;height:42px;border-radius:50%;cursor:pointer;display:grid;place-items:center}
-  .ox-bell:hover{background:rgba(255,255,255,.1)}
-  .ox-bell i{position:absolute;top:4px;right:2px;min-width:18px;height:18px;border-radius:9px;background:#e5203a;color:#fff;font:800 11px/18px Barlow,system-ui,sans-serif;font-style:normal;text-align:center;padding:0 4px}
-  .ox-h1{font:300 30px/1.2 Barlow,system-ui,sans-serif;color:#273142;margin:0 0 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  .ox-h1 small{font-size:13px;color:#6b7280;font-weight:400}
-  .ox-card{background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(16,24,40,.06);padding:18px 20px;margin-bottom:18px}
-  .ox-card h3{margin:0 0 14px;font:700 15px Barlow,system-ui,sans-serif;color:#273142;display:flex;align-items:center;justify-content:space-between;gap:10px}
-  .ox-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
-  .ox-kpi{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 1px 2px rgba(16,24,40,.06);border-top:3px solid var(--c,#273142)}
-  .ox-kpi span{display:block;font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
-  .ox-kpi b{display:block;font-size:28px;line-height:1.15;margin-top:6px;color:#1b2230}
-  .ox-kpi em{font-style:normal;font-size:12px;color:#6b7280}
-  .ox-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:18px}
-  @media(max-width:1000px){.ox-grid{grid-template-columns:1fr}.ox-nav{overflow-x:auto}}
-  .ox-seg{display:inline-flex;background:#fff;border-radius:8px;padding:3px;box-shadow:0 1px 2px rgba(16,24,40,.06)}
-  .ox-seg button{border:0;background:none;padding:7px 13px;border-radius:6px;font:600 13px Barlow,system-ui,sans-serif;color:#4b5563;cursor:pointer}
-  .ox-seg button.on{background:#273142;color:#fff}
-  .ox-bar{display:flex;align-items:center;gap:10px;margin:8px 0}
-  .ox-bar label{width:230px;font-size:13px;color:#374151;flex:none}
-  .ox-bar .tr{flex:1;height:26px;background:#f1f3f6;border-radius:6px;overflow:hidden}
-  .ox-bar .fl{height:100%;background:var(--c,#f27a1a);border-radius:6px;min-width:2px;transition:width .4s}
-  .ox-bar b{width:70px;text-align:right;font-size:13px}
+  #admin.oktx{padding:0;background:var(--bg,#E9EBEE)}
+  #admin.oktx .ap{max-width:none!important;width:100%!important;height:100%!important;max-height:none!important;border-radius:0!important;margin:0!important;display:grid!important;grid-template-columns:272px 1fr;grid-template-rows:100%;background:var(--bg,#E9EBEE);box-shadow:none;padding:0!important}
+  #admin.oktx .ah{background:var(--graphite,#1B1C20);color:#fff;padding:0!important;display:flex!important;flex-direction:column;flex-wrap:nowrap!important;align-items:stretch!important;gap:0;border:0;position:relative;overflow:hidden auto;height:100%}
+  #admin.oktx .ah>b{display:none}
+  #admin.oktx #aTabs{display:flex!important;flex-direction:column;flex:1 0 auto!important;gap:0;width:100%}
+  #admin.oktx #aClose{flex:none;align-self:stretch;margin:12px 18px 18px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:11px;font:600 14px var(--font,Barlow,sans-serif);position:relative;z-index:1}
+  #admin.oktx #aClose:hover{background:var(--red,#D0112B);border-color:var(--red,#D0112B)}
+  #admin.oktx .ab{overflow:auto;padding:0 0 48px!important;background:var(--bg,#E9EBEE)}
+  .ok-side-mark{position:absolute;left:-60px;bottom:-40px;width:340px;color:#fff;opacity:.045;pointer-events:none}
+  .ok-brand{padding:24px 22px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative;z-index:1}
+  .ok-brand svg{height:26px;width:auto;display:block;color:#fff}
+  .ok-brand-sub{padding:0 22px 16px;font:600 11px var(--font,Barlow,sans-serif);letter-spacing:2.4px;color:rgba(255,255,255,.45);text-transform:uppercase;position:relative;z-index:1;border-bottom:1px solid rgba(255,255,255,.08)}
+  .ok-grp{padding:16px 22px 6px;font:700 11px var(--font,Barlow,sans-serif);letter-spacing:1.8px;color:rgba(255,255,255,.38);text-transform:uppercase;position:relative;z-index:1}
+  .ok-nav-i{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;color:rgba(255,255,255,.78);padding:10px 22px;font:500 15px var(--font,Barlow,sans-serif);text-align:left;cursor:pointer;position:relative;z-index:1}
+  .ok-nav-i:hover{color:#fff;background:rgba(255,255,255,.05)}
+  .ok-nav-i.on{color:#fff;background:linear-gradient(90deg,rgba(208,17,43,.28),rgba(208,17,43,0));font-weight:700}
+  .ok-nav-i.on:before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:4px;background:var(--red,#D0112B)}
+  .ok-nav-i svg{width:18px;height:18px;flex:none;opacity:.85}
+  .ok-nav-i .cnt{margin-left:auto;background:var(--red,#D0112B);color:#fff;font:700 11px/18px var(--font,Barlow,sans-serif);min-width:20px;height:18px;border-radius:9px;text-align:center;padding:0 6px}
+  .ok-nav-i .cnt.g{background:rgba(255,255,255,.14)}
+  .ok-slogan{padding:18px 22px 6px;font:700 22px var(--cond,"Barlow Condensed",sans-serif);color:rgba(255,255,255,.85);position:relative;z-index:1}
+  .ok-slogan b{color:var(--red,#D0112B)}
+  .ok-top{position:sticky;top:0;z-index:5;background:rgba(233,235,238,.92);backdrop-filter:blur(8px);display:flex;align-items:center;gap:16px;padding:18px 34px 14px;border-bottom:1px solid var(--line,#E2E5E9)}
+  .ok-top .crumb{font:600 11.5px var(--font,Barlow,sans-serif);letter-spacing:1.6px;color:var(--muted,#646973)}
+  .ok-top h1{margin:2px 0 0;font:700 34px/1 var(--cond,"Barlow Condensed",sans-serif);color:var(--head,#1B1C20);text-transform:uppercase;letter-spacing:.3px;display:flex;align-items:center;gap:10px}
+  .ok-top h1:after{content:"";width:9px;height:9px;background:var(--red,#D0112B);display:inline-block;margin-top:10px}
+  .ok-top .sp{flex:1}
+  .ok-date{font:500 13px var(--font,Barlow,sans-serif);color:var(--muted,#646973);text-align:right;line-height:1.3}
+  .ok-date b{display:block;color:var(--head,#1B1C20);font-size:14px}
+  .ok-bell{position:relative;background:#fff;border:1px solid var(--line,#E2E5E9);color:var(--head,#1B1C20);width:44px;height:44px;border-radius:50%;cursor:pointer;display:grid;place-items:center}
+  .ok-bell:hover{border-color:var(--red,#D0112B);color:var(--red,#D0112B)}
+  .ok-bell i{position:absolute;top:-3px;right:-3px;min-width:20px;height:20px;border-radius:10px;background:var(--red,#D0112B);color:#fff;font:800 11px/20px var(--font,Barlow,sans-serif);font-style:normal;text-align:center;padding:0 5px;box-shadow:0 0 0 2px #E9EBEE}
+  .ok-body{padding:24px 34px}
+  .ok-body>.ox-h1{display:none}
+  .ok-body .ab-orig{background:#fff;border-radius:4px;padding:20px 22px}
+  .okc{--bc:var(--red,#D0112B);--bl:14px;--bw:2px;background-color:#fff;background-image:linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc));background-repeat:no-repeat;background-size:var(--bl) var(--bw),var(--bw) var(--bl),var(--bl) var(--bw),var(--bw) var(--bl),var(--bl) var(--bw),var(--bw) var(--bl),var(--bl) var(--bw),var(--bw) var(--bl);background-position:0 0,0 0,100% 0,100% 0,0 100%,0 100%,100% 100%,100% 100%}
+  .ox-card{background:#fff;border-radius:2px;box-shadow:0 1px 2px rgba(27,28,32,.06);padding:20px 22px;margin-bottom:18px}
+  .ox-card h3{margin:0 0 14px;font:700 19px var(--cond,"Barlow Condensed",sans-serif);text-transform:uppercase;letter-spacing:.4px;color:var(--head,#1B1C20);display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .ox-card h3 small{font:500 12.5px var(--font,Barlow,sans-serif);text-transform:none;letter-spacing:0;color:var(--muted,#646973)}
+  .ox-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:16px;margin-bottom:18px}
+  .ox-kpi{padding:18px 20px 16px;box-shadow:0 1px 2px rgba(27,28,32,.06)}
+  .ox-kpi span{display:block;font:600 11.5px var(--font,Barlow,sans-serif);color:var(--muted,#646973);text-transform:uppercase;letter-spacing:1.2px}
+  .ox-kpi b{display:block;font:700 40px/1.05 var(--cond,"Barlow Condensed",sans-serif);margin-top:8px;color:var(--head,#1B1C20)}
+  .ox-kpi b.red{color:var(--red,#D0112B)}
+  .ox-kpi em{font-style:normal;font-size:12.5px;color:var(--muted,#646973)}
+  .ok-hero{background:var(--graphite,#1B1C20);color:#fff;padding:22px 26px;margin-bottom:18px;display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:24px;position:relative;overflow:hidden}
+  .ok-hero .mk{position:absolute;right:-40px;top:-50px;width:260px;color:#fff;opacity:.06}
+  .ok-hero small{display:block;font:600 11.5px var(--font,Barlow,sans-serif);letter-spacing:1.4px;color:rgba(255,255,255,.55);text-transform:uppercase}
+  .ok-hero b{display:block;font:700 44px/1.05 var(--cond,"Barlow Condensed",sans-serif);margin-top:6px}
+  .ok-hero b em{font-style:normal;color:var(--red,#D0112B)}
+  .ok-hero p{margin:6px 0 0;color:rgba(255,255,255,.7);font-size:13px}
+  @media(max-width:1100px){.ok-hero{grid-template-columns:1fr}}
+  .ox-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:18px}
+  @media(max-width:1100px){.ox-grid{grid-template-columns:1fr}#admin.oktx .ap{grid-template-columns:220px 1fr}}
+  .ox-seg{display:inline-flex;background:#fff;border:1px solid var(--line,#E2E5E9);border-radius:4px;padding:3px}
+  .ox-seg button{border:0;background:none;padding:7px 13px;border-radius:3px;font:600 13px var(--font,Barlow,sans-serif);color:var(--muted,#646973);cursor:pointer}
+  .ox-seg button.on{background:var(--graphite,#1B1C20);color:#fff}
+  .ox-bar{display:flex;align-items:center;gap:10px;margin:9px 0}
+  .ox-bar label{width:230px;font-size:13.5px;color:var(--ink,#2A2C31);flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ox-bar .tr{flex:1;height:24px;background:#F1F2F4;overflow:hidden}
+  .ox-bar .fl{height:100%;background:var(--c,#D0112B);min-width:2px;transition:width .4s}
+  .ox-bar b{width:72px;text-align:right;font:700 16px var(--cond,"Barlow Condensed",sans-serif)}
   .ox-tbl{width:100%;border-collapse:collapse;font-size:13.5px}
-  .ox-tbl th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.3px;color:#6b7280;font-weight:700;padding:10px 10px;border-bottom:1px solid #e5e7eb;white-space:nowrap}
-  .ox-tbl td{padding:11px 10px;border-bottom:1px solid #f0f1f4;vertical-align:middle}
-  .ox-tbl tr:hover td{background:#fafbfc}
+  .ox-tbl th{text-align:left;font:700 11.5px var(--font,Barlow,sans-serif);text-transform:uppercase;letter-spacing:.8px;color:var(--muted,#646973);padding:10px 10px;border-bottom:2px solid var(--graphite,#1B1C20);white-space:nowrap}
+  .ox-tbl td{padding:11px 10px;border-bottom:1px solid #EEF0F2;vertical-align:middle}
+  .ox-tbl tr:hover td{background:#FAFAFB}
   .ox-tbl .r{text-align:right}
-  .ox-pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700;color:#fff;background:var(--c,#6b7280);white-space:nowrap}
-  .ox-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600;background:#fff4ea;color:#b45309;border:1px solid #fcd9b6;margin:2px 4px 2px 0}
-  .ox-tag.off{background:#fff;color:#6b7280;border-color:#e5e7eb;cursor:pointer}
+  .ox-pill{display:inline-block;padding:3px 10px;border-radius:2px;font:700 11.5px var(--font,Barlow,sans-serif);color:#fff;background:var(--c,#646973);white-space:nowrap;letter-spacing:.3px}
+  .ox-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:2px;font-size:12px;font-weight:600;background:var(--sel,#FCEFF1);color:var(--red,#D0112B);border:1px solid #F5C9D0;margin:2px 4px 2px 0}
+  .ox-tag.off{background:#fff;color:var(--muted,#646973);border-color:var(--line,#E2E5E9);cursor:pointer}
   .ox-tag.on{cursor:pointer}
+  .ox-tag.dk{background:#F1F2F4;color:var(--ink,#2A2C31);border-color:#E2E5E9}
   .ox-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-  .ox-chip{border:1px solid #d6dae1;background:#fff;border-radius:20px;padding:7px 14px;font:600 13px Barlow,system-ui,sans-serif;color:#374151;cursor:pointer}
-  .ox-chip.on{background:#273142;border-color:#273142;color:#fff}
-  .ox-chip i{font-style:normal;opacity:.7;margin-left:6px}
-  .ox-btn{border:1px solid #d6dae1;background:#fff;border-radius:7px;padding:7px 12px;font:600 13px Barlow,system-ui,sans-serif;color:#273142;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-  .ox-btn:hover{background:#f4f5f8}
-  .ox-btn.pri{background:#f27a1a;border-color:#f27a1a;color:#fff}
-  .ox-btn.pri:hover{background:#e06a0c}
-  .ox-btn.dk{background:#273142;border-color:#273142;color:#fff}
+  .ox-chip{border:1px solid #D3D7DD;background:#fff;border-radius:3px;padding:8px 14px;font:600 13px var(--font,Barlow,sans-serif);color:var(--ink,#2A2C31);cursor:pointer}
+  .ox-chip.on{background:var(--graphite,#1B1C20);border-color:var(--graphite,#1B1C20);color:#fff}
+  .ox-chip i{font-style:normal;opacity:.65;margin-left:6px}
+  .ox-btn{border:1px solid #D3D7DD;background:#fff;border-radius:4px;padding:8px 13px;font:600 13px var(--font,Barlow,sans-serif);color:var(--head,#1B1C20);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .ox-btn:hover{border-color:var(--graphite,#1B1C20)}
+  .ox-btn.pri{background:var(--red,#D0112B);border-color:var(--red,#D0112B);color:#fff}
+  .ox-btn.pri:hover{background:#B00E24}
+  .ox-btn.dk{background:var(--graphite,#1B1C20);border-color:var(--graphite,#1B1C20);color:#fff}
   .ox-btn.sm{padding:5px 9px;font-size:12px}
   .ox-btn:disabled{opacity:.45;cursor:not-allowed}
-  .ox-in{border:1px solid #d6dae1;border-radius:7px;padding:8px 10px;font:inherit;font-size:13px;background:#fff;color:#1b2230}
-  .ox-in:focus{outline:2px solid #f27a1a;border-color:#f27a1a}
+  .ox-in{border:1px solid #D3D7DD;border-radius:4px;padding:8px 10px;font:inherit;font-size:13.5px;background:#fff;color:var(--head,#1B1C20)}
+  .ox-in:focus{outline:2px solid var(--red,#D0112B);border-color:var(--red,#D0112B)}
   .ox-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
-  .ox-empty{color:#6b7280;font-size:14px;padding:26px;text-align:center}
+  .ox-empty{color:var(--muted,#646973);font-size:14px;padding:26px;text-align:center}
   .ox-feed{list-style:none;margin:0;padding:0}
-  .ox-feed li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f0f1f4;font-size:13.5px}
+  .ox-feed li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #EEF0F2;font-size:13.5px}
   .ox-feed li:last-child{border:0}
-  .ox-dot{width:10px;height:10px;border-radius:50%;background:var(--c);margin-top:5px;flex:none}
-  .ox-feed small{color:#6b7280;display:block;margin-top:2px}
-  .ox-pcard{display:grid;grid-template-columns:320px 1fr;gap:18px}
-  @media(max-width:1000px){.ox-pcard{grid-template-columns:1fr}}
-  .ox-note{background:#f8f9fb;border-radius:8px;padding:10px 12px;margin:8px 0;font-size:13.5px}
-  .ox-note small{color:#6b7280;display:block;margin-bottom:3px}
-  .ox-lines{font-size:12.5px;color:#374151;margin:8px 0 0;padding:10px 12px;background:#f8f9fb;border-radius:8px;max-height:260px;overflow:auto}
-  .ox-lines div{display:flex;justify-content:space-between;gap:12px;padding:3px 0;border-bottom:1px dashed #e5e7eb}
-  .ox-warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:14px}
-  .ox-due{color:#c2410c;font-weight:700}
+  .ox-dot{width:9px;height:9px;background:var(--c);margin-top:5px;flex:none}
+  .ox-feed small{color:var(--muted,#646973);display:block;margin-top:2px}
+  .ox-pcard{display:grid;grid-template-columns:330px 1fr;gap:18px}
+  @media(max-width:1100px){.ox-pcard{grid-template-columns:1fr}}
+  .ox-note{background:#F6F7F8;border-left:3px solid var(--red,#D0112B);padding:10px 12px;margin:8px 0;font-size:13.5px}
+  .ox-note small{color:var(--muted,#646973);display:block;margin-bottom:3px}
+  .ox-lines{font-size:12.5px;color:var(--ink,#2A2C31);margin:8px 0 0;padding:10px 12px;background:#F6F7F8;max-height:260px;overflow:auto}
+  .ox-lines div{display:flex;justify-content:space-between;gap:12px;padding:3px 0;border-bottom:1px dashed #E2E5E9}
+  .ox-warn{background:var(--sel,#FCEFF1);border-left:4px solid var(--red,#D0112B);color:#7A0A19;padding:11px 14px;font-size:13.5px;margin-bottom:16px}
+  .ox-due{color:var(--red,#D0112B);font-weight:700}
+  .kb{display:grid;grid-template-columns:repeat(8,minmax(188px,1fr));gap:12px;overflow-x:auto;padding-bottom:10px}
+  .kb-col{background:#DFE2E6;padding:10px;min-height:340px;display:flex;flex-direction:column;gap:10px}
+  .kb-col.drop{outline:2px dashed var(--red,#D0112B);outline-offset:-4px}
+  .kb-h{font:700 15px var(--cond,"Barlow Condensed",sans-serif);text-transform:uppercase;letter-spacing:.4px;color:var(--head,#1B1C20);display:flex;justify-content:space-between;align-items:center}
+  .kb-h i{font-style:normal;background:var(--graphite,#1B1C20);color:#fff;min-width:22px;height:20px;border-radius:2px;text-align:center;font-size:12px;line-height:20px;padding:0 5px}
+  .kb-d{font-size:11.5px;color:var(--muted,#646973);margin-top:-6px}
+  .kb-c{background:#fff;padding:12px 12px 10px;border-left:3px solid var(--c,#D0112B);cursor:grab;box-shadow:0 1px 2px rgba(27,28,32,.08)}
+  .kb-c:active{cursor:grabbing}
+  .kb-c b{display:block;font-size:14px}
+  .kb-c small{display:block;color:var(--muted,#646973);font-size:12px;margin-top:2px}
+  .kb-c .meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px}
+  .kb-c .acts{display:flex;gap:6px;margin-top:8px}
+  .kb-c input{width:100%;margin-top:6px;font-size:12px;padding:5px 7px}
+  .kb-late{color:var(--red,#D0112B);font-weight:700}
+  .ok-qr{position:fixed;inset:0;z-index:200;background:rgba(27,28,32,.72);display:grid;place-items:center;padding:20px}
+  .ok-qr-box{width:min(560px,100%);padding:34px 34px 26px;text-align:center}
+  .ok-qr-box svg.q{width:min(360px,72vw);height:auto;display:block;margin:16px auto}
+  .ok-qr-box h2{margin:0;font:700 32px var(--cond,"Barlow Condensed",sans-serif);text-transform:uppercase}
+  .ok-qr-box p{color:var(--muted,#646973);margin:4px 0}
+  .ok-qr-box .lg svg{height:30px;width:auto;color:var(--graphite,#1B1C20)}
+  .ok-reason{display:inline-block;background:#FFF6E5;color:#8A5300;border:1px solid #F3D9A4;font-size:12px;font-weight:600;padding:2px 8px;margin:2px 4px 2px 0;border-radius:2px}
   `;
+  css += css2;
   function ensureCss() {
     if (document.getElementById("ox-css")) return;
     var s = document.createElement("style"); s.id = "ox-css"; s.textContent = css; document.head.appendChild(s);
   }
+  var LOGO = (document.querySelector(".glogo") || {}).innerHTML || "", MARK = (document.querySelector(".gmark") || {}).innerHTML || "";
+  function logoSvg() { if (!LOGO) { var g = document.querySelector(".glogo"); LOGO = g ? g.innerHTML : ""; } return LOGO || '<b style="font:700 26px var(--cond)">OKT TRAILER</b>'; }
+  function markSvg() { if (!MARK) { var g = document.querySelector(".gmark"); MARK = g ? g.innerHTML : ""; } return MARK; }
 
-  /* ---------- menü ---------- */
+  /* ---------- yan menü ---------- */
+  var IC = {
+    dash: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
+    offers: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+    aband: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    people: '<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6M17 11a3 3 0 1 0 0-6M22 21c0-3-2-5-5-5"/>',
+    line: '<path d="M2 17h3l2-6h10l2 6h3"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M7 11V6h10v5"/>',
+    fleet: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>',
+    webasto: '<path d="M12 2c3 4-2 6 1 10 1.5 2 4 1 4-2 3 3 3 12-5 12S4 17 6 12c1 2 3 2 3 0 0-3 0-7 3-10z"/>',
+    camp: '<path d="M3 11v2a1 1 0 0 0 1 1h3l6 4V6L7 10H4a1 1 0 0 0-1 1zM17 8a5 5 0 0 1 0 8"/>',
+    price: '<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7" cy="7" r="1.5"/>',
+    bulk: '<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>',
+    tier: '<path d="M19 5L5 19M6.5 6.5h.01M17.5 17.5h.01"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+    cust: '<path d="M3 21V7l9-4 9 4v14M9 21v-6h6v6M3 21h18"/>',
+    report: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    notif: '<path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/>',
+    rec: '<path d="M4 4h16v16H4zM4 9h16M9 4v16"/>',
+    set: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
+  };
   var MENU = [
-    { id: "dash", label: "Ana Sayfa" },
-    { label: "Teklifler", items: [["offers", "Teklif Takibi"], ["aband", "Yarım Kalanlar", true], ["rec", "Form Kayıtları"]] },
-    { label: "Müşteriler", items: [["people", "Müşteri Kartları", true], ["cust", "Kayıtlı Firmalar"], ["tier", "İskonto Grupları"]] },
-    { label: "Ürün & Fiyat", items: [["price", "Fiyat Listesi"], ["bulk", "Toplu Fiyat Güncelleme", true]] },
-    { id: "camp", label: "Kampanyalar", isNew: true },
-    { id: "report", label: "Raporlar" },
-    { id: "notif", label: "Bildirimler" },
-    { id: "set", label: "Ayarlar" }
+    ["SATIŞ", [["dash", "Kokpit"], ["offers", "Teklifler"], ["aband", "Yarım Kalanlar"], ["people", "Müşteri Kartları"]]],
+    ["ÜRETİM", [["line", "Üretim Hattı"], ["fleet", "Teslim & Servis"]]],
+    ["FIRSATLAR", [["webasto", "Mobil Webasto Fırsatları"], ["camp", "Kampanya & Fuar QR"]]],
+    ["ÜRÜN & FİYAT", [["price", "Fiyat Listesi"], ["bulk", "Toplu Fiyat"], ["tier", "İskonto Grupları"], ["cust", "Kayıtlı Firmalar"]]],
+    ["ANALİZ", [["report", "Raporlar"], ["notif", "Bildirimler"], ["rec", "Form Kayıtları"], ["set", "Ayarlar"]]]
   ];
+  var TITLES = {}; MENU.forEach(function (g) { g[1].forEach(function (x) { TITLES[x[0]] = [g[0], x[1]]; }); });
+  function counts() {
+    var today = iso(Date.now());
+    return {
+      offers: offers().filter(function (o) { return o.durum === "Yeni"; }).length,
+      aband: abandoned().filter(function (a) { return !a.arandi; }).length,
+      line: production().filter(function (x) { return x.p.stage < STAGES.length - 1; }).length,
+      webasto: webastoOpps().filter(function (x) { return !x.onerildi; }).length,
+      fleet: production().filter(function (x) { return x.p.stage === STAGES.length - 1; }).length,
+      due: offers().filter(function (o) { return o.takip && o.takip <= today && o.durum !== "Kazanıldı" && o.durum !== "Kaybedildi"; }).length
+    };
+  }
   function nav(el, cur, XB) {
     ensureCss();
     var adm = document.getElementById("admin"); adm && adm.classList.add("oktx");
-    var title = adm && adm.querySelector(".ah>b"); if (title) title.textContent = "OKT Yönetim";
-    var html = '<div class="ox-nav">' + MENU.map(function (m, i) {
-      if (m.items) {
-        var on = m.items.some(function (x) { return x[0] === cur; });
-        return '<div class="ox-it' + (on ? " on" : "") + '" data-i="' + i + '"><button type="button">' + esc(m.label) + ' <span class="car">▼</span></button><div class="ox-dd">' +
-          m.items.map(function (x) { return '<button type="button" data-t="' + x[0] + '" class="' + (x[0] === cur ? "on" : "") + '">' + esc(x[1]) + (x[2] ? '<span class="ox-new">YENİ</span>' : "") + "</button>"; }).join("") + "</div></div>";
-      }
-      return '<div class="ox-it' + (m.id === cur ? " on" : "") + '"><button type="button" data-t="' + m.id + '">' + esc(m.label) + (m.isNew ? '<span class="ox-new">YENİ</span>' : "") + "</button></div>";
-    }).join("") + '</div><button type="button" class="ox-bell" id="oxBell" title="Bildirimler"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><i id="oxBellN" hidden></i></button>';
-    el.innerHTML = html;
-    el.style.flex = "1"; el.style.display = "flex"; el.style.alignItems = "center";
-    el.querySelectorAll("[data-t]").forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); XB(b.dataset.t); }; });
-    el.querySelectorAll(".ox-it").forEach(function (it) {
-      var b = it.querySelector(":scope>button");
-      if (it.querySelector(".ox-dd")) {
-        b.onclick = function (e) { e.stopPropagation(); var o = it.classList.contains("open"); el.querySelectorAll(".ox-it.open").forEach(function (x) { x.classList.remove("open"); }); if (!o) it.classList.add("open"); };
-        it.onmouseenter = function () { el.querySelectorAll(".ox-it.open").forEach(function (x) { x !== it && x.classList.remove("open"); }); it.classList.add("open"); };
-        it.onmouseleave = function () { it.classList.remove("open"); };
-      }
-    });
-    document.getElementById("oxBell").onclick = function () { LS.set(K_SEEN, Date.now()); XB("notif"); };
+    var ah = adm && adm.querySelector(".ah");
+    if (ah && !ah.querySelector(".ok-side-mark")) { var mk = document.createElement("div"); mk.className = "ok-side-mark"; mk.innerHTML = markSvg(); ah.insertBefore(mk, ah.firstChild); }
+    var cn = counts();
+    el.innerHTML = '<div class="ok-brand">' + logoSvg() + '</div><div class="ok-brand-sub">Yönetim Paneli</div>' +
+      MENU.map(function (g) {
+        return '<div class="ok-grp">' + g[0] + "</div>" + g[1].map(function (x) {
+          var c = cn[x[0]] || 0, badge = c ? '<span class="cnt' + (x[0] === "fleet" ? " g" : "") + '">' + c + "</span>" : "";
+          return '<button type="button" class="ok-nav-i' + (x[0] === cur ? " on" : "") + '" data-t="' + x[0] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (IC[x[0]] || "") + "</svg>" + esc(x[1]) + badge + "</button>";
+        }).join("");
+      }).join("") + '<div style="flex:1"></div><div class="ok-slogan">Doğru n<b>OKT</b>a</div>';
+    el.querySelectorAll("[data-t]").forEach(function (b) { b.onclick = function () { st.person = b.dataset.t === "people" ? null : st.person; XB(b.dataset.t); }; });
+    var cl = document.getElementById("aClose"); if (cl) cl.textContent = "← Konfigüratöre dön";
     updateBell();
   }
-  function updateBell() {
-    var n = bellCount(), i = document.getElementById("oxBellN");
-    if (i) { i.hidden = !n; i.textContent = n > 99 ? "99+" : n; }
-    var g = document.getElementById("admBtn");
-    if (g) { g.style.position = "relative"; var d = g.querySelector(".ox-gdot"); if (!d) { d = document.createElement("span"); d.className = "ox-gdot"; d.style.cssText = "position:absolute;top:4px;right:4px;width:9px;height:9px;border-radius:50%;background:#e5203a;box-shadow:0 0 0 2px #fff"; g.appendChild(d); } d.style.display = n ? "" : "none"; }
+  function header(tab) {
+    var t = TITLES[tab] || ["", tab], n = bellCount();
+    return '<div class="ok-top"><div><div class="crumb">OKT TRAILER · ' + esc(t[0]) + '</div><h1>' + esc(t[1]) + '</h1></div><div class="sp"></div><div class="ok-date"><b>' + new Date().toLocaleDateString("tr-TR", { weekday: "long" }) + "</b>" + new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" }) + '</div><button type="button" class="ok-bell" id="okBell" title="Bildirimler"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>' + (n ? "<i>" + (n > 99 ? "99+" : n) + "</i>" : "") + "</button></div>";
   }
+  function bindHeader(el) { var b = el.querySelector("#okBell"); if (b) b.onclick = function () { LS.set(K_SEEN, Date.now()); C().XB("notif"); }; }
+  function updateBell() {
+    var n = bellCount(), g = document.getElementById("admBtn");
+    if (g) { g.style.position = "relative"; var d = g.querySelector(".ox-gdot"); if (!d) { d = document.createElement("span"); d.className = "ox-gdot"; d.style.cssText = "position:absolute;top:4px;right:4px;width:9px;height:9px;border-radius:50%;background:#D0112B;box-shadow:0 0 0 2px #fff"; g.appendChild(d); } d.style.display = n ? "" : "none"; }
+  }
+  function kpi(l, v, s, red) { return '<div class="ox-kpi okc"><span>' + l + '</span><b class="' + (red ? "red" : "") + '">' + v + "</b><em>" + s + "</em></div>"; }
+  function bindGo(el) { el.querySelectorAll("[data-go]").forEach(function (b) { b.onclick = function (e) { e.preventDefault(); C().XB(b.dataset.go); }; }); }
+  function bars(list, color, fmt) {
+    if (!list.length) return '<div class="ox-empty">Henüz veri yok</div>';
+    var mx = Math.max.apply(null, list.map(function (x) { return x[1]; })) || 1;
+    return list.map(function (x) { return '<div class="ox-bar" style="--c:' + (x[2] || color) + '"><label title="' + esc(x[0]) + '">' + esc(x[0]) + '</label><div class="tr"><div class="fl" style="width:' + (x[1] / mx * 100) + '%"></div></div><b>' + (fmt ? fmt(x[1]) : x[1]) + "</b></div>"; }).join("");
+  }
+  function top(o, n) { return Object.keys(o).map(function (k) { return [k, o[k]]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, n); }
+  function segHtml() { return '<span class="ox-seg" id="oxPer">' + [["1", "Bugün"], ["7", "7 gün"], ["30", "30 gün"], ["all", "Tümü"]].map(function (x) { return '<button type="button" data-p="' + x[0] + '" class="' + (st.period === x[0] ? "on" : "") + '">' + x[1] + "</button>"; }).join("") + "</span>"; }
 
-  /* ---------- sayfalar ---------- */
+  /* ---------- KOKPİT ---------- */
   function pageDash(el) {
     var L = acts().filter(function (a) { return inPeriod(a.t); });
     var ppl = function (type) { var s = {}; L.forEach(function (a) { if (a.type === type) s[pkey(a)] = 1; }); return Object.keys(s).length; };
     var gir = ppl("giris"), sec = ppl("secim"), tekP = ppl("teklif");
     var offs = offers().filter(function (o) { return inPeriod(o.t); });
     var tut = offs.reduce(function (s, o) { return s + (o.toplam || 0); }, 0);
-    var ab = abandoned().filter(function (a) { return inPeriod(a.t) && !a.arandi; });
+    var ab = abandoned().filter(function (a) { return !a.arandi; });
     var conv = gir ? Math.round(tekP / gir * 100) : 0;
-    var won = offs.filter(function (o) { return o.durum === "Kazanıldı"; });
-    var prod = {}, opt = {}, camp = {};
+    var prod = production(), inLine = prod.filter(function (x) { return x.p.stage < STAGES.length - 1; });
+    var lw = leadWeeks(), wb = webastoOpps().filter(function (x) { return !x.onerildi; });
+    var secs = {}, opt = {};
     L.forEach(function (a) {
-      if (a.type === "teklif" || a.type === "secim") { if (a.urun) prod[a.urun] = (prod[a.urun] || 0) + 1; }
+      if (a.type === "teklif" || a.type === "secim") { var s = sector(a.urun); secs[s] = (secs[s] || 0) + 1; }
       if (a.type === "teklif") (a.lines || []).forEach(function (l) { if (l.l && l.t !== "Taban fiyat" && !/^(Standart|Hayır|Yok|OKT önersin|Dahil)$/i.test(l.l)) { var k = l.l + " — " + l.t; opt[k] = (opt[k] || 0) + 1; } });
-      if (a.type === "giris") { var c = a.kampanya || "(doğrudan)"; camp[c] = (camp[c] || 0) + 1; }
     });
-    function top(o, n) { return Object.keys(o).map(function (k) { return [k, o[k]]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, n); }
-    function bars(list, color) {
-      if (!list.length) return '<div class="ox-empty">Henüz veri yok</div>';
-      var mx = list[0][1] || 1;
-      return list.map(function (x) { return '<div class="ox-bar" style="--c:' + color + '"><label title="' + esc(x[0]) + '" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(x[0]) + '</label><div class="tr"><div class="fl" style="width:' + (x[1] / mx * 100) + '%"></div></div><b>' + x[1] + "</b></div>"; }).join("");
-    }
-    var today = new Date().toISOString().slice(0, 10);
+    var today = iso(Date.now());
     var due = offers().filter(function (o) { return o.takip && o.takip <= today && o.durum !== "Kazanıldı" && o.durum !== "Kaybedildi"; });
-    var stc = {}; offers().forEach(function (o) { stc[o.durum] = (stc[o.durum] || 0) + 1; });
-    var feed = acts().slice(0, 12);
-    var TY = { giris: ["#1d5fd1", "giriş yaptı"], secim: ["#5b6270", "teklif özetine ulaştı"], ayril: ["#c26a00", "form göndermeden ayrıldı"], teklif: ["#0f7a3d", "teklif talebi gönderdi"] };
-    var seg = [["1", "Bugün"], ["7", "7 gün"], ["30", "30 gün"], ["all", "Tümü"]].map(function (x) { return '<button type="button" data-p="' + x[0] + '" class="' + (st.period === x[0] ? "on" : "") + '">' + x[1] + "</button>"; }).join("");
+    var feed = acts().slice(0, 10);
+    var TY = { giris: ["#2B6CB0", "giriş yaptı"], secim: ["#646973", "teklif özetine ulaştı"], ayril: ["#B7791F", "form göndermeden ayrıldı"], teklif: ["#2F855A", "teklif talebi gönderdi"] };
+    var todo = [];
+    if (cn("offers")) todo.push(["offers", cn("offers") + " yeni teklif değerlendirilmeyi bekliyor"]);
+    if (due.length) todo.push(["offers", due.length + " teklifin takip günü geldi"]);
+    if (ab.length) todo.push(["aband", ab.length + " yarım kalan müşteri aranmayı bekliyor"]);
+    if (wb.length) todo.push(["webasto", wb.length + " müşteriye Mobil Webasto önerilebilir"]);
+    var late = inLine.filter(function (x) { return x.p.teslim && x.p.teslim < today; });
+    if (late.length) todo.push(["line", late.length + " aracın planlanan teslim tarihi geçti"]);
+    function cn(k) { return counts()[k] || 0; }
+    var deliver = new Date(Date.now() + lw * 7 * 86400000);
     el.innerHTML =
-      '<div class="ox-h1">Ana Sayfa <span class="ox-seg" id="oxPer">' + seg + '</span><small>Son güncelleme: ' + new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) + "</small></div>" +
-      (due.length ? '<div class="ox-warn">⏰ <b>' + due.length + " teklifin takip tarihi geldi.</b> " + due.slice(0, 3).map(function (o) { return esc(o.firma || o.ad); }).join(", ") + (due.length > 3 ? "…" : "") + ' <a href="#" id="oxDue" style="color:inherit;font-weight:700">Tekliflere git →</a></div>' : "") +
+      '<div class="ox-row" style="justify-content:space-between">' + segHtml() + '<span style="font-size:12.5px;color:#646973">Konfigüratör verileri · son güncelleme ' + new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) + "</span></div>" +
+      '<div class="ok-hero"><div class="mk">' + markSvg() + '</div><div><small>Bugün sipariş verilirse tahmini teslim</small><b>' + lw + ' <em>hafta</em></b><p>≈ ' + dday(deliver) + " · hatta " + inLine.length + " araç, haftalık kapasite " + pcfg().kapasite + ' araç</p></div><div><small>Teklif hacmi</small><b>' + eur(tut) + "</b><p>" + offs.length + " teklif · ortalama " + (offs.length ? eur(tut / offs.length) : "—") + '</p></div><div><small>Dönüşüm</small><b>%' + conv + "</b><p>" + gir + " girişten " + tekP + " teklif</p></div></div>" +
       '<div class="ox-kpis">' +
-      kpi("Giriş yapan", gir, "tekil müşteri", "#1d5fd1") +
-      kpi("Teklif talebi", offs.length, tekP + " müşteriden", "#0f7a3d") +
-      kpi("Dönüşüm oranı", "%" + conv, "girişten teklife", "#f27a1a") +
-      kpi("Teklif tutarı", eur(tut), offs.length ? "ort. " + eur(tut / offs.length) : "—", "#6b3fd1") +
-      kpi("Yarım kalan", ab.length, "aranmayı bekliyor", "#c26a00") +
-      kpi("Kazanılan", won.length, won.length ? eur(won.reduce(function (s, o) { return s + o.toplam; }, 0)) : "—", "#0f7a3d") +
+      kpi("Giriş yapan", gir, "tekil müşteri") + kpi("Yeni teklif", cn("offers"), "değerlendirme bekliyor", cn("offers") > 0) +
+      kpi("Yarım kalan", ab.length, "aranmayı bekliyor", ab.length > 0) + kpi("Üretimde", inLine.length, "araç hatta") +
+      kpi("Webasto fırsatı", wb.length, "önerilmeyi bekliyor", wb.length > 0) +
       "</div>" +
       '<div class="ox-grid"><div>' +
-      '<div class="ox-card"><h3>Dönüşüm hunisi</h3>' +
-      bars([["1 · Giriş yaptı", gir], ["2 · Teklif özetine ulaştı", Math.max(sec, tekP)], ["3 · Teklif gönderdi", tekP]], "#f27a1a") +
-      '<p style="font-size:12.5px;color:#6b7280;margin:10px 0 0">Girişlerin <b>%' + conv + "</b>'i teklife dönüştü. " + (gir - tekP > 0 ? (gir - tekP) + " kişi teklif göndermeden ayrıldı." : "") + "</p></div>" +
-      '<div class="ox-card"><h3>En çok seçilen opsiyonlar</h3>' + bars(top(opt, 7), "#273142") + "</div>" +
-      '<div class="ox-card"><h3>Ürünlere ilgi</h3>' + bars(top(prod, 6), "#6b3fd1") + "</div>" +
+      '<div class="ox-card"><h3>Bugün yapılacaklar <small>' + todo.length + " iş</small></h3>" + (todo.length ? '<ul class="ox-feed">' + todo.map(function (t) { return '<li style="--c:#D0112B"><span class="ox-dot"></span><div style="flex:1">' + esc(t[1]) + '</div><button type="button" class="ox-btn sm" data-go="' + t[0] + '">Git →</button></li>'; }).join("") + "</ul>" : '<div class="ox-empty">Bekleyen iş yok. Doğru noktadasınız 👌</div>') + "</div>" +
+      '<div class="ox-card"><h3>Dönüşüm hunisi</h3>' + bars([["1 · Konfigüratöre giriş", gir], ["2 · Teklif özetine ulaştı", Math.max(sec, tekP)], ["3 · Teklif gönderdi", tekP], ["4 · Kazanıldı", offs.filter(function (o) { return o.durum === "Kazanıldı"; }).length]], "#D0112B") + "</div>" +
+      '<div class="ox-card"><h3>Sektör dağılımı <small>teklif özeti ve teklifler</small></h3>' + bars(top(secs, 8).map(function (x) { return [x[0], x[1], SECTOR_COLOR[x[0]]]; }), "#1B1C20") + "</div>" +
+      '<div class="ox-card"><h3>En çok seçilen opsiyonlar</h3>' + bars(top(opt, 6), "#2A2C31") + "</div>" +
       '</div><div>' +
-      '<div class="ox-card"><h3>Son hareketler <button type="button" class="ox-btn sm" data-go="notif">Tümü</button></h3>' +
-      (feed.length ? '<ul class="ox-feed">' + feed.map(function (a) { var ty = TY[a.type] || ["#999", a.type]; return '<li style="--c:' + ty[0] + '"><span class="ox-dot"></span><div><b>' + esc(a.ad || a.firma || a.email || "Ziyaretçi") + "</b>" + (a.firma && a.ad ? " · " + esc(a.firma) : "") + " " + ty[1] + (a.type === "teklif" ? " · <b>" + eur(a.toplam) + "</b>" : "") + "<small>" + esc(a.urun || "") + (a.type === "ayril" && a.adim ? " · kaldığı yer: " + esc(a.adim) : "") + " · " + ago(a.t) + "</small></div></li>"; }).join("") + "</ul>" : '<div class="ox-empty">Henüz hareket yok. Müşteri girişi yapıldığında burada görünür.</div>') + "</div>" +
-      '<div class="ox-card"><h3>Teklif durumları <button type="button" class="ox-btn sm" data-go="offers">Teklif takibi</button></h3>' +
-      STATUSES.map(function (s) { return '<div class="ox-bar" style="--c:' + s[1] + '"><label>' + s[0] + '</label><div class="tr"><div class="fl" style="width:' + ((stc[s[0]] || 0) / Math.max(1, offers().length) * 100) + '%"></div></div><b>' + (stc[s[0]] || 0) + "</b></div>"; }).join("") + "</div>" +
-      '<div class="ox-card"><h3>Kampanya kaynakları <button type="button" class="ox-btn sm" data-go="camp">Kampanyalar</button></h3>' + bars(top(camp, 5), "#1d5fd1") + "</div>" +
+      '<div class="ox-card"><h3>Canlı hareketler <button type="button" class="ox-btn sm" data-go="notif">Tümü</button></h3>' +
+      (feed.length ? '<ul class="ox-feed">' + feed.map(function (a) { var ty = TY[a.type] || ["#999", a.type]; return '<li style="--c:' + ty[0] + '"><span class="ox-dot"></span><div><b>' + esc(a.ad || a.firma || a.email || "Ziyaretçi") + "</b>" + (a.firma && a.ad ? " · " + esc(a.firma) : "") + " " + ty[1] + (a.type === "teklif" ? " · <b>" + eur(a.toplam) + "</b>" : "") + "<small>" + esc(a.urun || "") + (a.type === "ayril" && a.adim ? " · kaldığı yer: " + esc(a.adim) : "") + " · " + ago(a.t) + "</small></div></li>"; }).join("") + "</ul>" : '<div class="ox-empty">Henüz hareket yok. Müşteri giriş yaptığında burada görünür.</div>') + "</div>" +
+      '<div class="ox-card"><h3>Üretim hattı <button type="button" class="ox-btn sm" data-go="line">Hatta git</button></h3>' +
+      bars(STAGES.slice(0, -1).map(function (s, i) { return [s[0], prod.filter(function (x) { return x.p.stage === i; }).length]; }), "#1B1C20") + "</div>" +
       "</div></div>";
-    el.querySelectorAll("#oxPer button").forEach(function (b) { b.onclick = function () { st.period = b.dataset.p; pageDash(el); }; });
+    el.querySelectorAll("#oxPer button").forEach(function (b) { b.onclick = function () { st.period = b.dataset.p; render("dash", el.closest("#aBody")); }; });
     bindGo(el);
-    var d = document.getElementById("oxDue"); if (d) d.onclick = function (e) { e.preventDefault(); st.offFilter = "Takip günü"; C().XB("offers"); };
   }
-  function kpi(l, v, s, c) { return '<div class="ox-kpi" style="--c:' + c + '"><span>' + l + "</span><b>" + v + "</b><em>" + s + "</em></div>"; }
-  function bindGo(el) { el.querySelectorAll("[data-go]").forEach(function (b) { b.onclick = function (e) { e.preventDefault(); C().XB(b.dataset.go); }; }); }
 
+  /* ---------- ÜRETİM HATTI ---------- */
+  function pageLine(el) {
+    var prod = production(), cfg = pcfg(), today = iso(Date.now());
+    var won = offers().filter(function (o) { return o.durum !== "Kazanıldı" && o.durum !== "Kaybedildi"; });
+    el.innerHTML = '<div class="ox-row"><span style="font-size:13.5px;color:#646973;flex:1">Kazanılan teklifler otomatik olarak <b>Proje & onay</b> aşamasına düşer. Kartları sürükleyin ya da ◀ ▶ ile ilerletin.</span>' +
+      '<label style="font-size:13px">Haftalık kapasite <input class="ox-in" id="kbCap" value="' + cfg.kapasite + '" style="width:56px"> araç</label><label style="font-size:13px">Standart üretim <input class="ox-in" id="kbSure" value="' + cfg.sure + '" style="width:56px"> hafta</label></div>' +
+      (prod.length ? "" : '<div class="ox-warn">Hatta henüz araç yok. <b>Teklifler</b> sayfasında bir teklifin durumunu <b>Kazanıldı</b> yapın, burada belirsin.' + (won.length ? ' <a href="#" data-go="offers" style="color:inherit;font-weight:700">Tekliflere git →</a>' : "") + "</div>") +
+      '<div class="kb">' + STAGES.map(function (s, i) {
+        var cards = prod.filter(function (x) { return x.p.stage === i; });
+        return '<div class="kb-col" data-s="' + i + '"><div class="kb-h">' + esc(s[0]) + "<i>" + cards.length + '</i></div><div class="kb-d">' + esc(s[1]) + "</div>" +
+          cards.map(function (x) {
+            var days = Math.floor((Date.now() - (x.p.stageT || x.p.start)) / 86400000), late = i < STAGES.length - 1 && x.p.teslim && x.p.teslim < today;
+            return '<div class="kb-c" draggable="true" data-no="' + esc(x.teklifNo) + '" style="--c:' + (SECTOR_COLOR[x.sector] || "#D0112B") + '"><b>' + esc(x.firma || x.ad) + "</b><small>" + esc(x.urun) + "</small><small>" + esc(x.teklifNo) + " · " + eur(x.toplam) + '</small><div class="meta"><span>' + (days ? days + " gündür bu aşamada" : "bugün geldi") + '</span></div>' +
+              '<input class="ox-in" data-f="sase" placeholder="Şase no" value="' + esc(x.p.sase || "") + '"><label style="font-size:11.5px;color:#646973;display:block;margin-top:6px">Plan. teslim <span class="' + (late ? "kb-late" : "") + '">' + (late ? "· gecikti" : "") + '</span><input class="ox-in" data-f="teslim" type="date" value="' + esc(x.p.teslim || "") + '"></label>' +
+              '<div class="acts">' + (i > 0 ? '<button type="button" class="ox-btn sm" data-mv="-1">◀</button>' : "") + (i < STAGES.length - 1 ? '<button type="button" class="ox-btn sm dk" data-mv="1" style="flex:1">' + esc(STAGES[i + 1][0]) + " ▶</button>" : '<span style="font-size:12px;color:#2F855A;font-weight:700">✓ Teslim edildi</span>') + "</div></div>";
+          }).join("") + "</div>";
+      }).join("") + "</div>";
+    function setP(no, fn) { var P = LS.get(K_PROD, {}); if (!P[no]) return; fn(P[no]); LS.set(K_PROD, P); }
+    el.querySelectorAll(".kb-c").forEach(function (c) {
+      var no = c.dataset.no;
+      c.querySelectorAll("[data-mv]").forEach(function (b) { b.onclick = function () { setP(no, function (p) { p.stage = Math.max(0, Math.min(STAGES.length - 1, p.stage + Number(b.dataset.mv))); p.stageT = Date.now(); if (p.stage === STAGES.length - 1) p.teslimT = Date.now(); }); toast("Aşama güncellendi"); render("line", el.closest("#aBody")); }; });
+      c.querySelectorAll("[data-f]").forEach(function (i) { i.onchange = function () { setP(no, function (p) { p[i.dataset.f] = i.value; }); toast("Kaydedildi"); }; });
+      c.addEventListener("dragstart", function (e) { e.dataTransfer.setData("text/plain", no); });
+    });
+    el.querySelectorAll(".kb-col").forEach(function (col) {
+      col.addEventListener("dragover", function (e) { e.preventDefault(); col.classList.add("drop"); });
+      col.addEventListener("dragleave", function () { col.classList.remove("drop"); });
+      col.addEventListener("drop", function (e) { e.preventDefault(); var no = e.dataTransfer.getData("text/plain"), s = Number(col.dataset.s); setP(no, function (p) { if (p.stage !== s) { p.stage = s; p.stageT = Date.now(); if (s === STAGES.length - 1) p.teslimT = Date.now(); } }); render("line", el.closest("#aBody")); });
+    });
+    function saveCfg() { var c = LS.get(K_PCFG, {}); c.kapasite = Number(document.getElementById("kbCap").value) || 3; c.sure = Number(document.getElementById("kbSure").value) || 6; LS.set(K_PCFG, c); toast("Kapasite kaydedildi"); }
+    document.getElementById("kbCap").onchange = saveCfg; document.getElementById("kbSure").onchange = saveCfg;
+    bindGo(el);
+  }
+
+  /* ---------- TESLİM & SERVİS ---------- */
+  function pageFleet(el) {
+    var cfg = pcfg(), list = production().filter(function (x) { return x.p.stage === STAGES.length - 1; }), now = Date.now();
+    function cell(t) { var d = Math.round((t - now) / 86400000), c = d < 0 ? "#D0112B" : d < 60 ? "#B7791F" : "#2F855A"; return '<b style="color:' + c + '">' + new Date(t).toLocaleDateString("tr-TR") + "</b><br><small>" + (d < 0 ? Math.abs(d) + " gün geçti" : d + " gün kaldı") + "</small>"; }
+    el.innerHTML = '<div class="ox-row"><span style="font-size:13.5px;color:#646973;flex:1">Teslim edilen araçlar ve yaklaşan servis tarihleri. Süreleri kendi garanti ve bakım politikanıza göre ayarlayın.</span>' +
+      '<label style="font-size:13px">Garanti <input class="ox-in" id="flG" value="' + cfg.garanti + '" style="width:52px"> ay</label><label style="font-size:13px">Bakım <input class="ox-in" id="flB" value="' + cfg.bakim + '" style="width:52px"> ay</label><label style="font-size:13px">Muayene <input class="ox-in" id="flM" value="' + cfg.muayene + '" style="width:52px"> ay</label></div>' +
+      '<div class="ox-card">' + (list.length ? '<table class="ox-tbl"><thead><tr><th>Müşteri</th><th>Araç</th><th>Şase no</th><th>Teslim</th><th>Sonraki bakım</th><th>Muayene / belge</th><th>Garanti bitişi</th><th></th></tr></thead><tbody>' +
+        list.map(function (x) {
+          var t0 = x.p.teslimT || x.p.stageT || now, body = "Merhaba " + (x.ad || "") + ",\n\n" + (x.urun || "Aracınız") + (x.p.sase ? " (şase no: " + x.p.sase + ")" : "") + " için periyodik bakım zamanı yaklaşıyor. Uygun olduğunuz bir tarihte servis randevunuzu planlayalım.\n\nSaygılarımızla,\nOKT Trailer Satış Sonrası Hizmetler";
+          return "<tr><td><b>" + esc(x.firma || x.ad) + "</b><br><small>" + esc(x.ad) + (x.tel ? " · " + esc(x.tel) : "") + "</small></td><td>" + esc(x.urun) + "<br><small>" + esc(x.teklifNo) + "</small></td><td><code>" + esc(x.p.sase || "—") + "</code></td><td>" + new Date(t0).toLocaleDateString("tr-TR") + "</td><td>" + cell(addMonths(t0, cfg.bakim)) + "</td><td>" + cell(addMonths(t0, cfg.muayene)) + "</td><td>" + cell(addMonths(t0, cfg.garanti)) + '</td><td style="white-space:nowrap">' + (x.tel ? '<a class="ox-btn sm" href="' + telLink(x.tel) + '">📞</a> ' : "") + (x.email ? '<a class="ox-btn sm" href="mailto:' + esc(x.email) + "?subject=" + encodeURIComponent("OKT Trailer · Bakım hatırlatması") + "&body=" + encodeURIComponent(body) + '">✉ Hatırlat</a>' : "") + "</td></tr>";
+        }).join("") + "</tbody></table>" : '<div class="ox-empty">Henüz teslim edilmiş araç yok. Üretim hattında bir kartı <b>Teslim edildi</b> aşamasına taşıyın.</div>') + "</div>";
+    function saveCfg() { var c = LS.get(K_PCFG, {}); c.garanti = Number(document.getElementById("flG").value) || 24; c.bakim = Number(document.getElementById("flB").value) || 12; c.muayene = Number(document.getElementById("flM").value) || 30; LS.set(K_PCFG, c); render("fleet", el.closest("#aBody")); }
+    ["flG", "flB", "flM"].forEach(function (id) { document.getElementById(id).onchange = saveCfg; });
+  }
+
+  /* ---------- MOBİL WEBASTO FIRSATLARI ---------- */
+  function pageWebasto(el) {
+    var all = webastoOpps(), list = all.filter(function (x) { return st.wbShowDone || !x.onerildi; });
+    el.innerHTML = '<div class="ox-hero-lite ox-card okc" style="display:flex;gap:22px;align-items:center"><div style="flex:1"><h3 style="margin:0 0 6px">Isı gereken yükte ısıtma seçilmemiş</h3><div style="font-size:14px;color:#2A2C31">Bitüm, gıda ve izolasyonlu tank gibi ısı kritik yükler; soğuk iklim veya uluslararası güzergâh seçen ama yapılandırmasında ısıtma bulunmayan müşteriler. <b>Mobil Webasto</b> kendi yakıtı ve aküsüyle tankı çekiciden bağımsız ısıtır.</div></div><a class="ox-btn dk" href="' + SITE + 'index.html" target="_blank" rel="noopener">Tanıtım sayfası ↗</a></div>' +
+      '<div class="ox-card"><div class="ox-row"><label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="wbD"' + (st.wbShowDone ? " checked" : "") + '> Önerilenleri de göster</label></div>' +
+      (list.length ? '<table class="ox-tbl"><thead><tr><th>Müşteri</th><th>Ürün</th><th>Neden fırsat?</th><th>Durum</th><th></th></tr></thead><tbody>' + list.map(function (x) {
+        var body = "Merhaba " + (x.ad || "") + ",\n\nOKT Trailer konfigüratöründe yapılandırdığınız " + (x.urun || "tanker") + " için bir öneride bulunmak istiyoruz: " + x.reasons.join(", ").toLowerCase() + " nedeniyle tankınızda ısı kontrolü önemli.\n\nMobil Webasto kendi yakıtı ve aküsüyle çalışır; tankınızı çekiciden bağımsız, ihtiyaç duyduğunuz yerde ısıtır.\n\nTanıtım: " + SITE + "index.html\nKonfigüratör: " + KONF + "?kampanya=mobil-webasto\n\nSaygılarımızla,\nOKT Trailer Satış Ekibi";
+        return '<tr data-k="' + esc(x.key) + '"' + (x.onerildi ? ' style="opacity:.55"' : "") + "><td><b>" + esc(x.ad || x.firma) + "</b>" + (x.firma && x.ad ? " · " + esc(x.firma) : "") + "<br><small>" + esc([x.email, x.tel].filter(Boolean).join(" · ")) + "</small></td><td>" + esc(x.urun) + '<br><span class="ox-pill" style="--c:' + (SECTOR_COLOR[sector(x.urun)] || "#646973") + '">' + esc(sector(x.urun)) + "</span></td><td>" + x.reasons.map(function (r) { return '<span class="ok-reason">' + esc(r) + "</span>"; }).join("") + "</td><td>" + (x.onerildi ? '<span class="ox-pill" style="--c:#2F855A">Önerildi</span>' : '<span class="ox-pill" style="--c:#D0112B">Fırsat</span>') + '</td><td style="white-space:nowrap">' + (x.email ? '<a class="ox-btn sm pri" href="mailto:' + esc(x.email) + "?subject=" + encodeURIComponent("OKT Trailer · Tankeriniz için Mobil Webasto") + "&body=" + encodeURIComponent(body) + '">✉ Mobil Webasto öner</a> ' : "") + (x.tel ? '<a class="ox-btn sm" href="' + telLink(x.tel) + '">📞</a> ' : "") + '<button type="button" class="ox-btn sm" data-done>' + (x.onerildi ? "↺" : "✓ Önerildi") + "</button></td></tr>";
+      }).join("") + "</tbody></table>" : '<div class="ox-empty">' + (all.length ? "Tüm fırsatlara öneri yapıldı 🎯" : "Şu an fırsat yok. Bitüm, gıda veya soğuk iklim seçen müşteriler burada belirir.") + "</div>") + "</div>";
+    document.getElementById("wbD").onchange = function (e) { st.wbShowDone = e.target.checked; render("webasto", el.closest("#aBody")); };
+    el.querySelectorAll("tr[data-k]").forEach(function (tr) { tr.querySelector("[data-done]").onclick = function () { var m = LS.get(K_WB, {}); var c = m[tr.dataset.k] || {}; m[tr.dataset.k] = { onerildi: !c.onerildi, t: Date.now() }; LS.set(K_WB, m); render("webasto", el.closest("#aBody")); }; });
+  }
+
+  /* ---------- FUAR QR ---------- */
+  function showQr(kod, ad) {
+    var url = KONF + "?kampanya=" + encodeURIComponent(kod), svg;
+    try { svg = OKTQR.svg(url, { color: "#1B1C20" }).replace("<svg ", '<svg class="q" '); } catch (e) { svg = "<p>QR oluşturulamadı</p>"; }
+    var o = document.createElement("div"); o.className = "ok-qr";
+    o.innerHTML = '<div class="ok-qr-box okc" style="--bl:26px;--bw:4px"><div class="lg">' + logoSvg() + '</div><h2 style="margin-top:14px">Size özel tankerin ilk adımı</h2><p>Kodu okutun, aracınızı yapılandırın, fiyatı anında görün.</p>' + svg + '<p style="font:700 20px var(--cond)">' + esc(ad || kod) + '</p><p style="font-size:11.5px;word-break:break-all">' + esc(url) + '</p><div class="ox-row" style="justify-content:center;margin:16px 0 0"><button type="button" class="ox-btn pri" id="qrPng">PNG indir</button><button type="button" class="ox-btn" id="qrX">Kapat</button></div></div>';
+    document.body.appendChild(o);
+    o.onclick = function (e) { if (e.target === o) o.remove(); };
+    o.querySelector("#qrX").onclick = function () { o.remove(); };
+    o.querySelector("#qrPng").onclick = function () {
+      var s = o.querySelector("svg.q"); if (!s) return;
+      var x = new XMLSerializer().serializeToString(s), img = new Image();
+      img.onload = function () { var c = document.createElement("canvas"); c.width = c.height = 1200; var g = c.getContext("2d"); g.imageSmoothingEnabled = false; g.drawImage(img, 0, 0, 1200, 1200); c.toBlob(function (b) { try { C().Fs(b, "OKT_QR_" + kod + ".png"); } catch (e) { var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "OKT_QR_" + kod + ".png"; a.click(); } }); };
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(x);
+    };
+  }
+  /* ---------- sayfalar ---------- */
   function pageOffers(el) {
     var all = offers(), today = new Date().toISOString().slice(0, 10);
     var cnt = { "Tümü": all.length, "Takip günü": 0 };
@@ -4721,13 +5017,13 @@ ${M3(a.b64)}`}),new Blob([i+`--${t}--\r
     });
     var chips = ["Tümü"].concat(STATUSES.map(function (s) { return s[0]; })).concat(["Takip günü"]).map(function (k) { return '<button type="button" class="ox-chip' + (st.offFilter === k ? " on" : "") + '" data-f="' + k + '">' + k + "<i>" + (cnt[k] || 0) + "</i></button>"; }).join("");
     var stColor = {}; STATUSES.forEach(function (s) { stColor[s[0]] = s[1]; });
-    el.innerHTML = '<div class="ox-h1">Teklif Takibi <small>Konfigüratörden gelen teklif talepleri · durumunu, temsilcisini ve takip tarihini buradan yönetin</small></div>' +
+    el.innerHTML = '<div class="ox-h1 sub"><small>Konfigüratörden gelen teklif talepleri · durumunu, temsilcisini ve takip tarihini buradan yönetin</small></div>' +
       '<div class="ox-chips">' + chips + "</div>" +
       '<div class="ox-card"><div class="ox-row"><input class="ox-in" id="oxOq" placeholder="Teklif no, firma, kişi veya ürün ara" style="flex:1;min-width:240px" value="' + esc(st.offQ) + '"><button type="button" class="ox-btn" id="oxOx">⬇ Excel\'e aktar</button></div>' +
       (list.length ? '<div style="overflow:auto"><table class="ox-tbl"><thead><tr><th>Tarih</th><th>Teklif no</th><th>Müşteri</th><th>Ürün</th><th class="r">Tutar</th><th>Durum</th><th>Temsilci</th><th>Takip</th><th></th></tr></thead><tbody>' +
         list.map(function (o) {
           var dueCls = o.takip && o.takip <= today && o.durum !== "Kazanıldı" && o.durum !== "Kaybedildi" ? " ox-due" : "";
-          return '<tr data-no="' + esc(o.teklifNo) + '"><td style="white-space:nowrap">' + dt(o.t) + '</td><td><code>' + esc(o.teklifNo) + "</code>" + (o.kampanya ? '<br><span class="ox-tag">' + esc(o.kampanya) + "</span>" : "") + "</td><td><b>" + esc(o.firma || "—") + "</b><br><small>" + esc(o.ad) + (o.email ? " · " + esc(o.email) : "") + "</small></td><td>" + esc(o.urun) + '</td><td class="r"><b>' + eur(o.toplam) + "</b>" + (o.pct ? "<br><small>%" + o.pct + " iskonto</small>" : "") + '</td><td><select class="ox-in" data-k="durum" style="border-left:4px solid ' + stColor[o.durum] + '">' + STATUSES.map(function (s) { return "<option" + (s[0] === o.durum ? " selected" : "") + ">" + s[0] + "</option>"; }).join("") + '</select></td><td><input class="ox-in" data-k="temsilci" value="' + esc(o.temsilci) + '" placeholder="Atanmadı" style="width:120px"></td><td><input class="ox-in' + dueCls + '" type="date" data-k="takip" value="' + esc(o.takip) + '" style="width:140px"></td><td style="white-space:nowrap">' +
+          return '<tr data-no="' + esc(o.teklifNo) + '"><td style="white-space:nowrap">' + dt(o.t) + '</td><td><code>' + esc(o.teklifNo) + "</code>" + (o.kampanya ? '<br><span class="ox-tag">' + esc(o.kampanya) + "</span>" : "") + "</td><td><b>" + esc(o.firma || "—") + "</b><br><small>" + esc(o.ad) + (o.email ? " · " + esc(o.email) : "") + "</small></td><td>" + esc(o.urun) + '<br><span class="ox-pill" style="--c:' + (SECTOR_COLOR[o.sector] || "#646973") + '">' + esc(o.sector) + '</span></td><td class="r"><b>' + eur(o.toplam) + "</b>" + (o.pct ? "<br><small>%" + o.pct + " iskonto</small>" : "") + '</td><td><select class="ox-in" data-k="durum" style="border-left:4px solid ' + stColor[o.durum] + '">' + STATUSES.map(function (s) { return "<option" + (s[0] === o.durum ? " selected" : "") + ">" + s[0] + "</option>"; }).join("") + '</select></td><td><input class="ox-in" data-k="temsilci" value="' + esc(o.temsilci) + '" placeholder="Atanmadı" style="width:120px"></td><td><input class="ox-in' + dueCls + '" type="date" data-k="takip" value="' + esc(o.takip) + '" style="width:140px"></td><td style="white-space:nowrap">' +
             (o.tel ? '<a class="ox-btn sm" href="' + telLink(o.tel) + '">📞 Ara</a> ' : "") + (o.email ? '<a class="ox-btn sm" href="mailto:' + esc(o.email) + "?subject=" + encodeURIComponent("OKT Trailer · Teklifiniz " + o.teklifNo) + '">✉ Mail</a> ' : "") + '<button type="button" class="ox-btn sm" data-det>Detay ▾</button></td></tr>' +
             '<tr data-detrow hidden><td colspan="9"><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div><b style="font-size:13px">Seçimler</b><div class="ox-lines">' + (o.lines || []).map(function (l) { return "<div><span>" + esc(l.t) + ": <b>" + esc(l.l) + "</b></span><span>" + (l.p ? eur(l.p) : "Dahil") + "</span></div>"; }).join("") + '</div></div><div><b style="font-size:13px">Not</b><textarea class="ox-in" data-k="not" rows="5" style="width:100%;margin-top:8px" placeholder="Görüşme notu ekleyin…">' + esc(o.not) + "</textarea>" + (o.notlar ? '<p style="font-size:12.5px;color:#6b7280">Müşteri notları: ' + esc(o.notlar) + "</p>" : "") + "</div></div></td></tr>";
         }).join("") + "</tbody></table></div>" : '<div class="ox-empty">' + (all.length ? "Bu filtrede teklif yok." : "Henüz teklif talebi yok. Müşteri formu gönderdiğinde burada görünür.") + "</div>") + "</div>";
@@ -4739,7 +5035,7 @@ ${M3(a.b64)}`}),new Blob([i+`--${t}--\r
     el.querySelectorAll("tr[data-no]").forEach(function (tr) {
       var no = tr.dataset.no, det = tr.nextElementSibling;
       function save(k, v) { var m = LS.get(K_OFF, {}); m[no] = m[no] || {}; m[no][k] = v; LS.set(K_OFF, m); }
-      tr.querySelectorAll("[data-k]").forEach(function (i) { i.onchange = function () { save(i.dataset.k, i.value); toast("Kaydedildi"); if (i.dataset.k === "durum") pageOffers(el); }; });
+      tr.querySelectorAll("[data-k]").forEach(function (i) { i.onchange = function () { save(i.dataset.k, i.value); if (i.dataset.k === "durum" && i.value === "Kazanıldı") { production(); toast("Tebrikler! Araç üretim hattına eklendi"); } else toast("Kaydedildi"); if (i.dataset.k === "durum") render("offers", el.closest("#aBody")); }; });
       det.querySelectorAll("[data-k]").forEach(function (i) { i.onchange = function () { save(i.dataset.k, i.value); toast("Not kaydedildi"); }; });
       tr.querySelector("[data-det]").onclick = function () { det.hidden = !det.hidden; };
     });
@@ -4748,7 +5044,7 @@ ${M3(a.b64)}`}),new Blob([i+`--${t}--\r
   function pageAband(el) {
     var all = abandoned(), list = all.filter(function (a) { return st.abShowDone || !a.arandi; });
     var waiting = all.filter(function (a) { return !a.arandi; }).length;
-    el.innerHTML = '<div class="ox-h1">Yarım Kalanlar <small>Formu göndermeden ayrılan müşteriler · ' + waiting + " kişi aranmayı bekliyor</small></div>" +
+    el.innerHTML = '<div class="ox-h1 sub"><small>Formu göndermeden ayrılan müşteriler · ' + waiting + " kişi aranmayı bekliyor</small></div>" +
       '<div class="ox-card"><div class="ox-row"><label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="oxAbD"' + (st.abShowDone ? " checked" : "") + '> Arananları da göster</label><span style="flex:1"></span><button type="button" class="ox-btn" id="oxAbX">⬇ Excel\'e aktar</button></div>' +
       (list.length ? '<div style="overflow:auto"><table class="ox-tbl"><thead><tr><th>Ne zaman</th><th>Müşteri</th><th>Ürün</th><th>Kaldığı yer</th><th>İlerleme</th><th class="r">Ara toplam</th><th></th></tr></thead><tbody>' +
         list.map(function (a) {
@@ -4770,11 +5066,11 @@ ${M3(a.b64)}`}),new Blob([i+`--${t}--\r
     if (st.person) return pagePerson(el, st.person);
     var q = st.peopleQ.toLocaleLowerCase("tr-TR"), all = people();
     var list = all.filter(function (p) { return !q || (p.ad + " " + p.firma + " " + p.email + " " + p.tags.join(" ")).toLocaleLowerCase("tr-TR").indexOf(q) >= 0; });
-    el.innerHTML = '<div class="ox-h1">Müşteri Kartları <small>Konfigüratörü kullanan herkes ve kayıtlı firmalarınız · ' + all.length + " kişi</small></div>" +
+    el.innerHTML = '<div class="ox-h1 sub"><small>Konfigüratörü kullanan herkes ve kayıtlı firmalarınız · ' + all.length + " kişi</small></div>" +
       '<div class="ox-card"><div class="ox-row"><input class="ox-in" id="oxPq" placeholder="Ad, firma, e-posta veya etiket ara" style="flex:1;min-width:240px" value="' + esc(st.peopleQ) + '"><button type="button" class="ox-btn" id="oxPx">⬇ Excel\'e aktar</button></div>' +
       (list.length ? '<div style="overflow:auto"><table class="ox-tbl"><thead><tr><th>Müşteri</th><th>Etiketler</th><th class="r">Giriş</th><th class="r">Teklif</th><th class="r">Teklif tutarı</th><th>Son görülme</th><th></th></tr></thead><tbody>' +
         list.map(function (p) {
-          return '<tr data-k="' + esc(p.key) + '" style="cursor:pointer"><td><b>' + esc(p.ad || p.firma || "—") + "</b>" + (p.kayitli ? ' <span class="ox-pill" style="--c:#273142">' + esc(p.kayitli) + "</span>" : "") + "<br><small>" + esc([p.firma, p.email, p.tel].filter(Boolean).join(" · ")) + "</small></td><td>" + (p.tags.map(function (t) { return '<span class="ox-tag">' + esc(t) + "</span>"; }).join("") || '<small style="color:#9aa0a8">—</small>') + '</td><td class="r">' + p.giris + '</td><td class="r">' + p.teklif + '</td><td class="r"><b>' + (p.tutar ? eur(p.tutar) : "—") + "</b></td><td>" + (p.son ? ago(p.son) : "—") + '</td><td><button type="button" class="ox-btn sm">Kartı aç →</button></td></tr>';
+          return '<tr data-k="' + esc(p.key) + '" style="cursor:pointer"><td><b>' + esc(p.ad || p.firma || "—") + "</b>" + (p.kayitli ? ' <span class="ox-pill" style="--c:#1B1C20">' + esc(p.kayitli) + "</span>" : "") + "<br><small>" + esc([p.firma, p.email, p.tel].filter(Boolean).join(" · ")) + "</small></td><td>" + (p.tags.map(function (t) { return '<span class="ox-tag">' + esc(t) + "</span>"; }).join("") || '<small style="color:#9aa0a8">—</small>') + '</td><td class="r">' + p.giris + '</td><td class="r">' + p.teklif + '</td><td class="r"><b>' + (p.tutar ? eur(p.tutar) : "—") + "</b></td><td>" + (p.son ? ago(p.son) : "—") + '</td><td><button type="button" class="ox-btn sm">Kartı aç →</button></td></tr>';
         }).join("") + "</tbody></table></div>" : '<div class="ox-empty">Henüz müşteri yok.</div>') + "</div>";
     var pq = document.getElementById("oxPq"); pq.oninput = function () { st.peopleQ = pq.value; clearTimeout(pagePeople.t); pagePeople.t = setTimeout(function () { pagePeople(el); var x = document.getElementById("oxPq"); x.focus(); x.setSelectionRange(x.value.length, x.value.length); }, 300); };
     document.getElementById("oxPx").onclick = function () { download("OKT_Musteriler.csv", csv([["Ad soyad", "Firma", "E-posta", "Telefon", "Kayıtlı no", "Etiketler", "Giriş", "Teklif", "Teklif tutarı", "Son görülme", "Kampanya"]].concat(all.map(function (p) { return [p.ad, p.firma, p.email, p.tel, p.kayitli || "", p.tags.join(", "), p.giris, p.teklif, p.tutar, p.son ? dt(p.son) : "", p.kampanya]; })))); };
@@ -4784,19 +5080,19 @@ ${M3(a.b64)}`}),new Blob([i+`--${t}--\r
     var p = people().filter(function (x) { return x.key === key; })[0];
     if (!p) { st.person = null; return pagePeople(el); }
     var hist = acts().filter(function (a) { return pkey(a) === key; });
-    var TY = { giris: ["#1d5fd1", "Giriş yaptı"], secim: ["#5b6270", "Teklif özetine ulaştı"], ayril: ["#c26a00", "Form göndermeden ayrıldı"], teklif: ["#0f7a3d", "Teklif talebi gönderdi"] };
+    var TY = { giris: ["#2B6CB0", "Giriş yaptı"], secim: ["#646973", "Teklif özetine ulaştı"], ayril: ["#B7791F", "Form göndermeden ayrıldı"], teklif: ["#2F855A", "Teklif talebi gönderdi"] };
     function saveCrm(fn) { var all = LS.get(K_CRM, {}); var c = all[key] || { tags: [], notes: [] }; fn(c); all[key] = c; LS.set(K_CRM, all); pagePerson(el, key); }
-    el.innerHTML = '<div class="ox-h1"><button type="button" class="ox-btn" id="oxBack">← Müşteriler</button> ' + esc(p.ad || p.firma) + (p.firma && p.ad ? " <small>" + esc(p.firma) + "</small>" : "") + "</div>" +
+    el.innerHTML = '<div class="ox-h1 keep"><button type="button" class="ox-btn" id="oxBack">← Müşteriler</button> ' + esc(p.ad || p.firma) + (p.firma && p.ad ? " <small>" + esc(p.firma) + "</small>" : "") + "</div>" +
       '<div class="ox-pcard"><div>' +
       '<div class="ox-card"><h3>İletişim</h3><div style="font-size:14px;line-height:1.9">' + (p.email ? "✉ " + esc(p.email) + "<br>" : "") + (p.tel ? "📞 " + esc(p.tel) + "<br>" : "") + (p.kayitli ? "🏷 Kayıtlı firma no: " + esc(p.kayitli) + "<br>" : "") + (p.kampanya ? "📣 Kampanya: " + esc(p.kampanya) + "<br>" : "") + (p.ilk ? "İlk görülme: " + dt(p.ilk) : "") + "</div>" +
       '<div class="ox-row" style="margin:12px 0 0">' + (p.tel ? '<a class="ox-btn pri" href="' + telLink(p.tel) + '">📞 Ara</a>' : "") + (p.email ? '<a class="ox-btn" href="mailto:' + esc(p.email) + '">✉ Mail gönder</a>' : "") + "</div></div>" +
-      '<div class="ox-kpis" style="grid-template-columns:1fr 1fr">' + kpi("Giriş", p.giris, "kez", "#1d5fd1") + kpi("Teklif", p.teklif, p.tutar ? eur(p.tutar) : "—", "#0f7a3d") + "</div>" +
+      '<div class="ox-kpis" style="grid-template-columns:1fr 1fr">' + kpi("Giriş", p.giris, "kez") + kpi("Teklif", p.teklif, p.tutar ? eur(p.tutar) : "—", "#2F855A") + "</div>" +
       '<div class="ox-card"><h3>Etiketler</h3><div>' + TAGS.map(function (t) { var on = p.tags.indexOf(t) >= 0; return '<span class="ox-tag ' + (on ? "on" : "off") + '" data-tag="' + esc(t) + '">' + (on ? "✓ " : "+ ") + esc(t) + "</span>"; }).join("") + p.tags.filter(function (t) { return TAGS.indexOf(t) < 0; }).map(function (t) { return '<span class="ox-tag on" data-tag="' + esc(t) + '">✓ ' + esc(t) + "</span>"; }).join("") +
       '</div><div class="ox-row" style="margin:10px 0 0"><input class="ox-in" id="oxTagN" placeholder="Yeni etiket" style="flex:1"><button type="button" class="ox-btn sm" id="oxTagA">Ekle</button></div></div>' +
       '</div><div>' +
       '<div class="ox-card"><h3>Notlar</h3><div class="ox-row"><textarea class="ox-in" id="oxNote" rows="2" style="flex:1" placeholder="Görüşme notu, ihtiyaç, bütçe…"></textarea><button type="button" class="ox-btn pri" id="oxNoteA">Not ekle</button></div>' +
       (p.notes.length ? p.notes.slice().reverse().map(function (n, i) { return '<div class="ox-note"><small>' + dt(n.t) + ' · <a href="#" data-del="' + (p.notes.length - 1 - i) + '" style="color:#9aa0a8">sil</a></small>' + esc(n.x).replace(/\n/g, "<br>") + "</div>"; }).join("") : '<div class="ox-empty" style="padding:10px">Henüz not yok.</div>') + "</div>" +
-      '<div class="ox-card"><h3>Geçmiş</h3>' + (hist.length ? '<ul class="ox-feed">' + hist.map(function (a) { var ty = TY[a.type] || ["#999", a.type]; return '<li style="--c:' + ty[0] + '"><span class="ox-dot"></span><div style="flex:1"><b>' + ty[1] + "</b>" + (a.type === "teklif" ? " · " + esc(a.teklifNo) + " · <b>" + eur(a.toplam) + "</b>" : "") + "<small>" + esc(a.urun || "") + (a.adim ? " · kaldığı yer: " + esc(a.adim) : "") + " · " + dt(a.t) + "</small>" + (a.type === "teklif" && a.lines && a.lines.length ? '<details><summary style="cursor:pointer;font-size:12.5px;color:#1d5fd1;margin-top:4px">Seçimleri göster</summary><div class="ox-lines">' + a.lines.map(function (l) { return "<div><span>" + esc(l.t) + ": <b>" + esc(l.l) + "</b></span><span>" + (l.p ? eur(l.p) : "Dahil") + "</span></div>"; }).join("") + "</div></details>" : "") + "</div></li>"; }).join("") + "</ul>" : '<div class="ox-empty">Bu müşteri henüz konfigüratörü kullanmadı.</div>') + "</div>" +
+      '<div class="ox-card"><h3>Geçmiş</h3>' + (hist.length ? '<ul class="ox-feed">' + hist.map(function (a) { var ty = TY[a.type] || ["#999", a.type]; return '<li style="--c:' + ty[0] + '"><span class="ox-dot"></span><div style="flex:1"><b>' + ty[1] + "</b>" + (a.type === "teklif" ? " · " + esc(a.teklifNo) + " · <b>" + eur(a.toplam) + "</b>" : "") + "<small>" + esc(a.urun || "") + (a.adim ? " · kaldığı yer: " + esc(a.adim) : "") + " · " + dt(a.t) + "</small>" + (a.type === "teklif" && a.lines && a.lines.length ? '<details><summary style="cursor:pointer;font-size:12.5px;color:#2B6CB0;margin-top:4px">Seçimleri göster</summary><div class="ox-lines">' + a.lines.map(function (l) { return "<div><span>" + esc(l.t) + ": <b>" + esc(l.l) + "</b></span><span>" + (l.p ? eur(l.p) : "Dahil") + "</span></div>"; }).join("") + "</div></details>" : "") + "</div></li>"; }).join("") + "</ul>" : '<div class="ox-empty">Bu müşteri henüz konfigüratörü kullanmadı.</div>') + "</div>" +
       "</div></div>";
     document.getElementById("oxBack").onclick = function () { st.person = null; pagePeople(el); };
     el.querySelectorAll("[data-tag]").forEach(function (t) { t.onclick = function () { var tag = t.dataset.tag; saveCrm(function (c) { var i = c.tags.indexOf(tag); i >= 0 ? c.tags.splice(i, 1) : c.tags.push(tag); }); }; });
@@ -4823,9 +5119,9 @@ ${M3(a.b64)}`}),new Blob([i+`--${t}--\r
     var days = {}; L.forEach(function (a) { var d = new Date(a.t).toISOString().slice(0, 10); var g = days[d] || (days[d] = { g: 0, t: 0 }); if (a.type === "giris") g.g++; if (a.type === "teklif") g.t++; });
     var dk = Object.keys(days).sort().slice(-14), mx = Math.max.apply(null, [1].concat(dk.map(function (d) { return Math.max(days[d].g, days[d].t); })));
     var seg = [["1", "Bugün"], ["7", "7 gün"], ["30", "30 gün"], ["all", "Tümü"]].map(function (x) { return '<button type="button" data-p="' + x[0] + '" class="' + (st.period === x[0] ? "on" : "") + '">' + x[1] + "</button>"; }).join("");
-    el.innerHTML = '<div class="ox-h1">Raporlar <span class="ox-seg" id="oxPer">' + seg + '</span><button type="button" class="ox-btn pri" id="oxAll">⬇ Tüm hareketleri Excel\'e aktar</button></div>' +
-      '<div class="ox-card"><h3>Günlük giriş ve teklif <span style="font-size:12px;font-weight:400;color:#6b7280"><span style="display:inline-block;width:10px;height:10px;background:#1d5fd1;border-radius:2px"></span> Giriş &nbsp; <span style="display:inline-block;width:10px;height:10px;background:#0f7a3d;border-radius:2px"></span> Teklif</span></h3>' +
-      (dk.length ? '<div style="display:flex;align-items:flex-end;gap:10px;height:170px;padding:0 4px;border-bottom:1px solid #e5e7eb">' + dk.map(function (d) { return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end"><div style="display:flex;gap:3px;align-items:flex-end;height:140px"><div title="Giriş: ' + days[d].g + '" style="width:14px;background:#1d5fd1;border-radius:3px 3px 0 0;height:' + (days[d].g / mx * 100) + '%"></div><div title="Teklif: ' + days[d].t + '" style="width:14px;background:#0f7a3d;border-radius:3px 3px 0 0;height:' + (days[d].t / mx * 100) + '%"></div></div><small style="font-size:11px;color:#6b7280">' + d.slice(8, 10) + "." + d.slice(5, 7) + "</small></div>"; }).join("") + "</div>" : '<div class="ox-empty">Bu dönemde veri yok.</div>') + "</div>" +
+    el.innerHTML = '<div class="ox-h1 sub"><span class="ox-seg" id="oxPer">' + seg + '</span><button type="button" class="ox-btn pri" id="oxAll">⬇ Tüm hareketleri Excel\'e aktar</button></div>' +
+      '<div class="ox-card"><h3>Günlük giriş ve teklif <span style="font-size:12px;font-weight:400;color:#6b7280"><span style="display:inline-block;width:10px;height:10px;background:#1B1C20;border-radius:2px"></span> Giriş &nbsp; <span style="display:inline-block;width:10px;height:10px;background:#D0112B;border-radius:2px"></span> Teklif</span></h3>' +
+      (dk.length ? '<div style="display:flex;align-items:flex-end;gap:10px;height:170px;padding:0 4px;border-bottom:1px solid #e5e7eb">' + dk.map(function (d) { return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end"><div style="display:flex;gap:3px;align-items:flex-end;height:140px"><div title="Giriş: ' + days[d].g + '" style="width:14px;background:#1B1C20;border-radius:3px 3px 0 0;height:' + (days[d].g / mx * 100) + '%"></div><div title="Teklif: ' + days[d].t + '" style="width:14px;background:#D0112B;border-radius:3px 3px 0 0;height:' + (days[d].t / mx * 100) + '%"></div></div><small style="font-size:11px;color:#6b7280">' + d.slice(8, 10) + "." + d.slice(5, 7) + "</small></div>"; }).join("") + "</div>" : '<div class="ox-empty">Bu dönemde veri yok.</div>') + "</div>" +
       '<div class="ox-grid"><div>' + table("Ürün bazında", byProd, "urun", "Ürün") + table("Kampanya bazında", byCamp, "kampanya", "Kampanya") + "</div><div>" +
       '<div class="ox-card"><h3>İskonto dağılımı</h3>' + (Object.keys(byDisc).length ? '<table class="ox-tbl"><thead><tr><th>İskonto</th><th class="r">Teklif</th><th class="r">Tutar</th></tr></thead><tbody>' + Object.keys(byDisc).map(function (k) { var g = byDisc[k]; return "<tr><td>" + esc(k) + '</td><td class="r">' + g.n + '</td><td class="r"><b>' + eur(g.t) + "</b></td></tr>"; }).join("") + "</tbody></table>" : '<div class="ox-empty">Veri yok.</div>') + "</div>" +
       '<div class="ox-card"><h3>Temsilci performansı</h3>' + (Object.keys(byRep).length ? '<table class="ox-tbl"><thead><tr><th>Temsilci</th><th class="r">Teklif</th><th class="r">Kazanılan</th><th class="r">Kazanılan tutar</th></tr></thead><tbody>' + Object.keys(byRep).map(function (k) { var g = byRep[k]; return "<tr><td>" + esc(k) + '</td><td class="r">' + g.n + '</td><td class="r">' + g.w + '</td><td class="r"><b>' + eur(g.t) + "</b></td></tr>"; }).join("") + "</tbody></table>" : '<div class="ox-empty">Veri yok.</div>') + "</div>" +
@@ -4841,14 +5137,15 @@ ${M3(a.b64)}`}),new Blob([i+`--${t}--\r
     var L = acts();
     function stat(kod) { var g = {}, t = 0, n = 0; L.forEach(function (a) { if (String(a.kampanya || "").toLowerCase() !== String(kod).toLowerCase()) return; if (a.type === "giris") g[pkey(a)] = 1; if (a.type === "teklif") { n++; t += a.toplam || 0; } }); return { g: Object.keys(g).length, n: n, t: t }; }
     function save() { C().ho(); try { C().gf(); } catch (e) {} toast("Kampanyalar kaydedildi"); }
-    el.innerHTML = '<div class="ox-h1">Kampanyalar <small>Kampanya linkiyle gelen müşterilere otomatik indirim tanımlayın ve performansını izleyin</small></div>' +
-      '<div class="ox-card"><h3>Kampanya listesi <button type="button" class="ox-btn pri" id="oxCAdd">+ Yeni kampanya</button></h3>' +
+    el.innerHTML = '<div class="ox-h1 sub"><small>Kampanya linkiyle gelen müşterilere otomatik indirim tanımlayın ve performansını izleyin</small></div>' +
+      '<div class="ox-card"><h3>Kampanyalar <button type="button" class="ox-btn pri" id="oxCAdd">+ Yeni kampanya</button></h3>' +
       '<div style="overflow:auto"><table class="ox-tbl"><thead><tr><th>Durum</th><th>Kampanya kodu</th><th>Ad</th><th class="r">İndirim %</th><th class="r">Giriş</th><th class="r">Teklif</th><th class="r">Tutar</th><th>Link</th><th></th></tr></thead><tbody>' +
-      list.map(function (k, i) { var s = stat(k.kod), url = SITE + "?kampanya=" + encodeURIComponent(k.kod); return '<tr data-i="' + i + '"><td><label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" data-f="aktif"' + (k.aktif !== false ? " checked" : "") + "> " + (k.aktif !== false ? '<span class="ox-pill" style="--c:#0f7a3d">Aktif</span>' : '<span class="ox-pill" style="--c:#9aa0a8">Pasif</span>') + '</label></td><td><input class="ox-in" data-f="kod" value="' + esc(k.kod) + '" style="width:150px"></td><td><input class="ox-in" data-f="ad" value="' + esc(k.ad) + '" style="width:220px"></td><td class="r"><input class="ox-in" data-f="pct" value="' + esc(k.pct) + '" inputmode="decimal" style="width:70px;text-align:right"></td><td class="r">' + s.g + '</td><td class="r">' + s.n + '</td><td class="r"><b>' + eur(s.t) + '</b></td><td><button type="button" class="ox-btn sm" data-copy="' + esc(url) + '">🔗 Linki kopyala</button></td><td><button type="button" class="ox-btn sm" data-del>Sil</button></td></tr>'; }).join("") +
-      '</tbody></table></div><p style="font-size:12.5px;color:#6b7280;margin:12px 0 0">İndirim, müşterinin iskonto grubuna <b>ek olarak</b> uygulanır ve fiyatta hemen görünür. Mail taslağındaki konfigüratör butonu <code>mobil-webasto</code> koduyla gelir.</p></div>';
+      list.map(function (k, i) { var s = stat(k.kod), url = SITE + "?kampanya=" + encodeURIComponent(k.kod); return '<tr data-i="' + i + '"><td><label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" data-f="aktif"' + (k.aktif !== false ? " checked" : "") + "> " + (k.aktif !== false ? '<span class="ox-pill" style="--c:#2F855A">Aktif</span>' : '<span class="ox-pill" style="--c:#9aa0a8">Pasif</span>') + '</label></td><td><input class="ox-in" data-f="kod" value="' + esc(k.kod) + '" style="width:150px"></td><td><input class="ox-in" data-f="ad" value="' + esc(k.ad) + '" style="width:220px"></td><td class="r"><input class="ox-in" data-f="pct" value="' + esc(k.pct) + '" inputmode="decimal" style="width:70px;text-align:right"></td><td class="r">' + s.g + '</td><td class="r">' + s.n + '</td><td class="r"><b>' + eur(s.t) + '</b></td><td style="white-space:nowrap"><button type="button" class="ox-btn sm dk" data-qr>▦ Fuar QR</button> <button type="button" class="ox-btn sm" data-copy="' + esc(url) + '">🔗 Linki kopyala</button></td><td><button type="button" class="ox-btn sm" data-del>Sil</button></td></tr>'; }).join("") +
+      '</tbody></table></div><p style="font-size:12.5px;color:#6b7280;margin:12px 0 0">İndirim, müşterinin iskonto grubuna <b>ek olarak</b> uygulanır ve fiyatta hemen görünür. Mail taslağındaki konfigüratör butonu <code>mobil-webasto</code> koduyla gelir. <b>Fuar QR</b> ile stant için basılabilir QR kodu alın; okutan ziyaretçiler o kampanyaya sayılır.</p></div>';
     el.querySelectorAll("tr[data-i]").forEach(function (tr) {
       var k = list[Number(tr.dataset.i)];
       tr.querySelectorAll("[data-f]").forEach(function (inp) { inp.onchange = function () { var f = inp.dataset.f; k[f] = f === "aktif" ? inp.checked : f === "pct" ? Math.max(0, Math.min(90, Number(String(inp.value).replace(",", ".")) || 0)) : inp.value.trim(); save(); pageCamp(el); }; });
+      tr.querySelector("[data-qr]").onclick = function () { showQr(k.kod, k.ad); };
       tr.querySelector("[data-del]").onclick = function () { list.splice(Number(tr.dataset.i), 1); save(); pageCamp(el); };
       tr.querySelector("[data-copy]").onclick = function (e) { var u = e.target.dataset.copy; try { navigator.clipboard.writeText(u).then(function () { toast("Link kopyalandı"); }, function () { prompt("Link:", u); }); } catch (_) { prompt("Link:", u); } };
     });
@@ -4862,14 +5159,14 @@ ${M3(a.b64)}`}),new Blob([i+`--${t}--\r
     function nv(v) { return Math.max(0, Math.round(v * (1 + pct / 100) / rnd) * rnd); }
     var sample = items.slice(0, 8);
     var ovr = Object.keys(xr.codeOverrides || {}).length, kur = (core.Xt.settings || {}).kur || "";
-    el.innerHTML = '<div class="ox-h1">Toplu Fiyat Güncelleme <small>Tüm fiyatlara veya bir ürüne tek seferde zam / indirim uygulayın</small></div>' +
+    el.innerHTML = '<div class="ox-h1 sub"><small>Tüm fiyatlara veya bir ürüne tek seferde zam / indirim uygulayın</small></div>' +
       '<div class="ox-grid"><div><div class="ox-card"><h3>Güncelleme</h3>' +
       '<div class="ox-row"><label style="width:120px;font-size:13px">Kapsam</label><select class="ox-in" id="oxBp" style="flex:1"><option value="*">Tüm ürünler</option>' + Go.map(function (g) { return '<option value="' + g.id + '"' + (g.id === st.bulkPid ? " selected" : "") + ">" + esc(g.name) + "</option>"; }).join("") + "</select></div>" +
       '<div class="ox-row"><label style="width:120px;font-size:13px">Değişim (%)</label><input class="ox-in" id="oxBv" value="' + esc(st.bulkPct) + '" placeholder="Örn. 5 veya -3" inputmode="decimal" style="width:140px"><span style="font-size:12.5px;color:#6b7280">Zam için pozitif, indirim için negatif</span></div>' +
       '<div class="ox-row"><label style="width:120px;font-size:13px">Yuvarlama</label><select class="ox-in" id="oxBr">' + [["1", "Yok"], ["10", "10 €"], ["50", "50 €"], ["100", "100 €"]].map(function (r) { return '<option value="' + r[0] + '"' + (r[0] === String(st.bulkRound) ? " selected" : "") + ">" + r[1] + "</option>"; }).join("") + "</select></div>" +
       '<div class="ox-row" style="margin-top:6px"><button type="button" class="ox-btn pri" id="oxBgo"' + (pct ? "" : " disabled") + ">" + items.length + " fiyatı güncelle</button>" + (ovr ? '<button type="button" class="ox-btn" id="oxBrst">Tüm değişiklikleri geri al (' + ovr + ")</button>" : "") + "</div></div>" +
       '<div class="ox-card"><h3>Euro kuru</h3><div class="ox-row"><label style="width:120px;font-size:13px">1 € =</label><input class="ox-in" id="oxKur" value="' + esc(kur) + '" placeholder="Örn. 37,50" inputmode="decimal" style="width:140px"><span style="font-size:13px">TL</span><button type="button" class="ox-btn dk" id="oxKurS">Kaydet</button></div><p style="font-size:12.5px;color:#6b7280;margin:0">Kur girildiğinde toplam fiyatın altında yaklaşık TL karşılığı gösterilir.</p></div></div>' +
-      '<div><div class="ox-card"><h3>Önizleme</h3>' + (sample.length ? '<table class="ox-tbl"><thead><tr><th>Kalem</th><th class="r">Şimdi</th><th class="r">Yeni</th></tr></thead><tbody>' + sample.map(function (o) { return "<tr><td>" + esc(o.soru) + "<br><small>" + esc(o.secenek) + '</small></td><td class="r">' + eur(o.fiyat) + '</td><td class="r"><b style="color:' + (pct > 0 ? "#b91c1c" : pct < 0 ? "#0f7a3d" : "inherit") + '">' + eur(nv(o.fiyat)) + "</b></td></tr>"; }).join("") + "</tbody></table>" + (items.length > sample.length ? '<p style="font-size:12.5px;color:#6b7280">…ve ' + (items.length - sample.length) + " kalem daha</p>" : "") : '<div class="ox-empty">Kalem yok</div>') + "</div></div></div>";
+      '<div><div class="ox-card"><h3>Önizleme</h3>' + (sample.length ? '<table class="ox-tbl"><thead><tr><th>Kalem</th><th class="r">Şimdi</th><th class="r">Yeni</th></tr></thead><tbody>' + sample.map(function (o) { return "<tr><td>" + esc(o.soru) + "<br><small>" + esc(o.secenek) + '</small></td><td class="r">' + eur(o.fiyat) + '</td><td class="r"><b style="color:' + (pct > 0 ? "#b91c1c" : pct < 0 ? "#2F855A" : "inherit") + '">' + eur(nv(o.fiyat)) + "</b></td></tr>"; }).join("") + "</tbody></table>" + (items.length > sample.length ? '<p style="font-size:12.5px;color:#6b7280">…ve ' + (items.length - sample.length) + " kalem daha</p>" : "") : '<div class="ox-empty">Kalem yok</div>') + "</div></div></div>";
     document.getElementById("oxBp").onchange = function (e) { st.bulkPid = e.target.value; pageBulk(el); };
     document.getElementById("oxBv").onchange = function (e) { st.bulkPct = e.target.value; pageBulk(el); };
     document.getElementById("oxBr").onchange = function (e) { st.bulkRound = e.target.value; pageBulk(el); };
@@ -4885,23 +5182,36 @@ ${M3(a.b64)}`}),new Blob([i+`--${t}--\r
     document.getElementById("oxKurS").onclick = function () { var v = Number(String(document.getElementById("oxKur").value).replace(",", ".")) || 0; core.Xt.settings = core.Xt.settings || {}; core.Xt.settings.kur = v; core.ho(); try { core.gf(); } catch (e) {} toast("Kur kaydedildi"); };
   }
 
-  var PAGES = { dash: pageDash, offers: pageOffers, aband: pageAband, people: pagePeople, report: pageReport, camp: pageCamp, bulk: pageBulk };
+
+  var PAGES = { dash: pageDash, offers: pageOffers, aband: pageAband, people: pagePeople, report: pageReport, camp: pageCamp, bulk: pageBulk, line: pageLine, fleet: pageFleet, webasto: pageWebasto };
+  function wrapOrig(tab) {
+    var b = document.getElementById("aBody"); if (!b || b.querySelector(":scope>.ok-top")) return;
+    var wrap = document.createElement("div"); wrap.className = "ok-body"; var inner = document.createElement("div"); inner.className = "ab-orig";
+    while (b.firstChild) inner.appendChild(b.firstChild);
+    wrap.appendChild(inner); b.innerHTML = header(tab); b.appendChild(wrap); bindHeader(b);
+  }
   function render(tab, el) {
     ensureCss(); updateBell();
     if (tab === "notif") LS.set(K_SEEN, Date.now());
-    var fn = PAGES[tab]; if (!fn) { if (tab !== "people") st.person = st.person; return false; }
-    try { fn(el); } catch (e) { console.error(e); el.innerHTML = '<div class="ox-empty">Bu sayfa yüklenirken bir sorun oluştu.</div>'; }
+    var t = document.getElementById("aTabs");
+    var fn = PAGES[tab];
+    if (!fn) { setTimeout(function () { wrapOrig(tab); }, 0); return false; }
+    el.innerHTML = header(tab) + '<div class="ok-body"></div>'; bindHeader(el);
+    var body = el.querySelector(".ok-body");
+    try { fn(body); } catch (e) { console.error(e); body.innerHTML = '<div class="ox-empty">Bu sayfa yüklenirken bir sorun oluştu.</div>'; }
+    if (t && C() && t.querySelector(".ok-nav-i")) nav(t, tab, C().XB);
     return true;
   }
   function refresh() {
     updateBell();
     var c = C(); if (!c || !c.isOpen()) return;
-    var tab = c.getC();
-    if ((tab === "dash" || tab === "offers" || tab === "aband" || tab === "notif" || (tab === "people" && !st.person)) && !document.activeElement.closest("#aBody input,#aBody textarea,#aBody select")) c.gr();
+    var tab = c.getC(), ae = document.activeElement;
+    if (ae && ae.closest && ae.closest("#aBody input,#aBody textarea,#aBody select")) return;
+    if (["dash", "offers", "aband", "notif", "line", "webasto"].indexOf(tab) >= 0 || (tab === "people" && !st.person)) c.gr();
+    else { var tt = document.getElementById("aTabs"); if (tt) nav(tt, tab, c.XB); }
   }
   window.addEventListener("storage", function (e) { if (e.key === K_ACT || e.key === "okt-bildirimler") refresh(); });
   window.addEventListener("okt-ev", refresh);
-  document.addEventListener("click", function () { document.querySelectorAll(".ox-it.open").forEach(function (x) { x.classList.remove("open"); }); });
   window.__oktAdm = { nav: nav, render: render, refresh: refresh };
 })();
 </script>
